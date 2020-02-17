@@ -11,7 +11,7 @@
 **                                                                            **
 **  AUTHOR       : Sahar Elnagar                                              **
 **                                                                            **
-**                                                                            **
+**  Description  :  Device deiver for Internal EEPROM                         **
 *******************************************************************************/
 
 
