@@ -27,7 +27,16 @@ typedef uint8   EepDefaultModeType;
 typedef uint16  Eep_AddressType;
 typedef uint16  Eep_LengthType;
 
+#ifndef NULL_PTR
 #define NULL_PTR  ((void*)0)
+#endif
+
+//*****************************************************************************
+//
+//  Define word size in EEPROM
+//
+//*****************************************************************************
+#define PHYSICAL_WORD_SIZE       4
 
 /*******************************************************************************/
 //  EEPROM Module ID
@@ -95,7 +104,7 @@ typedef uint16  Eep_LengthType;
 
 
 /*******************************************************************************/
-//  Container for runtime configuration parameters of the EEPROM driver.
+//  Container for  configuration parameters of the EEPROM driver.
 //   Implementation Type: Eep_ConfigType.
 /*******************************************************************************/
 typedef struct

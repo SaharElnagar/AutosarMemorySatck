@@ -67,14 +67,6 @@
 //*****************************************************************************
 #define OFFSET_FROM_ADDR(x) (((x) >> 2) & 0x0F)
 
-
-//*****************************************************************************
-//
-//  Define word size in EEPROM
-//
-//*****************************************************************************
-#define WORD_SIZE       4
-
 //*****************************************************************************
 //
 // Macro to represent a pattern ofAttempts to read from a block
@@ -755,10 +747,10 @@ static void Eep_MainFunction_Read(void)
       HWREG(EEPROM_EEOFFSET) = OFFSET_FROM_ADDR(ParametersCopyObj.Address)   ;
 
      /*Check if the current address is not word aligned*/
-      if(ParametersCopyObj.Address % WORD_SIZE != 0)
+      if(ParametersCopyObj.Address % PHYSICAL_WORD_SIZE != 0)
       {
           /*Get the start byte number to read in the word located in the required address */
-          ByteNum = ParametersCopyObj.Address % WORD_SIZE ;
+          ByteNum = ParametersCopyObj.Address % PHYSICAL_WORD_SIZE ;
 
           /*Read the word located at the current address*/
           DataWord = HWREG(EEPROM_EERDWRINC) ;
@@ -774,7 +766,7 @@ static void Eep_MainFunction_Read(void)
               StatusType = MEMIF_IDLE   ;
               break;
           }
-          if(ByteNum == WORD_SIZE)
+          if(ByteNum == PHYSICAL_WORD_SIZE)
           {
             /* Read the next word through the autoincrementing register.*/
               DataWord = HWREG(EEPROM_EERDWRINC);
@@ -843,16 +835,16 @@ static void Eep_MainFunction_Write(void)
      HWREG(EEPROM_EEOFFSET) = OFFSET_FROM_ADDR(ParametersCopyObj.Address)   ;
 
     /*Check if the current address is not word aligned*/
-     if(ParametersCopyObj.Address % WORD_SIZE != 0)
+     if(ParametersCopyObj.Address % PHYSICAL_WORD_SIZE != 0)
      {
          /*Get the start byte number to read in the word located in the required address */
-         ByteNum = ParametersCopyObj.Address % WORD_SIZE ;
+         ByteNum = ParametersCopyObj.Address % PHYSICAL_WORD_SIZE ;
          /*Read the word to only modify desired bytes*/
          DataWord = HWREG(EEPROM_EERDWR) ;
      }
      while(ParametersCopyObj.Length)
     {
-        if(ByteNum == WORD_SIZE )
+        if(ByteNum == PHYSICAL_WORD_SIZE )
         {
            /*
             * This is a workaround for a silicon problem on Blizzard rev A.  We
@@ -894,6 +886,7 @@ static void Eep_MainFunction_Write(void)
              {
                  /*Read the word to only modify desired bytes*/
                   DataWord = HWREG(EEPROM_EERDWR) ;
+                  ByteNum = 0;
              }
         }
         else
@@ -1013,17 +1006,17 @@ static void Eep_MainFunction_Compare(void)
       HWREG(EEPROM_EEOFFSET) = OFFSET_FROM_ADDR(ParametersCopyObj.Address)   ;
 
      /*Check if the current address is not word aligned*/
-      if(ParametersCopyObj.Address % WORD_SIZE != 0)
+      if(ParametersCopyObj.Address % PHYSICAL_WORD_SIZE != 0)
       {
           /*Get the start byte number to read in the word located in the required address */
-          ByteNum = ParametersCopyObj.Address % WORD_SIZE ;
+          ByteNum = ParametersCopyObj.Address % PHYSICAL_WORD_SIZE ;
 
           /*Read the word located at the current address*/
           DataWord = HWREG(EEPROM_EERDWRINC) ;
       }
       while(ParametersCopyObj.Length)
       {
-          if(ByteNum == WORD_SIZE)
+          if(ByteNum == PHYSICAL_WORD_SIZE)
           {
             /* Read the next word through the autoincrementing register.*/
               DataWord = HWREG(EEPROM_EERDWRINC);

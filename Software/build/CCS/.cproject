@@ -48,6 +48,7 @@
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/static/Mcal/Eep/inc"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/static/Infrastructure/inc"/>
+									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/static/Interface/EA/inc"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/gen"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/static/Infrastructure/platform/inc"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/stub"/>

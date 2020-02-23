@@ -19,9 +19,18 @@ typedef uint8 MemIf_JobResultType;
 
 
 typedef uint8 MemIf_StatusType;
+/* The underlying abstraction module or device driver has not been initialized (yet).*/
 #define     MEMIF_UNINIT            (0U)
+
+/*The underlying abstraction module or device driver is currently idle. */
 #define     MEMIF_IDLE              (1U)
+
+/*The underlying abstraction module or device driver is currently busy.*/
 #define     MEMIF_BUSY              (2U)
+
+/*The underlying abstraction module is busy with internal management operations.
+ *  The underlying device driver can be busy or idle.
+ */
 #define     MEMIF_BUSY_INTERNAL     (3U)
 
 typedef uint8 MemIf_ModeType;

@@ -112,6 +112,7 @@ PDE_DEPS__QUOTED :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 . \
+bsw/static/Interface/EA/src \
 bsw/static/Mcal/Eep/src \
 bsw/static/Mcal/Flash/src \
 bsw/stub \
