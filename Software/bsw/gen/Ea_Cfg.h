@@ -76,14 +76,14 @@
   Note: Depending on the number of bits set aside for dataset selection several other block numbers
   shall also be left out to ease implementation.
 */
-#define EA_BLOCK_0_NUMBER
-#define EA_BLOCK_1_NUMBER
-#define EA_BLOCK_2_NUMBER
+#define EA_BLOCK_0_NUMBER                   (1U)
+#define EA_BLOCK_1_NUMBER                   (5U)
+#define EA_BLOCK_2_NUMBER                   (18U)
 
 /*Size of a logical block in bytes. */
-#define  EA_BLOCK_0_SIZE
-#define  EA_BLOCK_1_SIZE
-#define  EA_BLOCK_2_SIZE
+#define  EA_BLOCK_0_SIZE                    (32U)
+#define  EA_BLOCK_1_SIZE                    (100U)
+#define  EA_BLOCK_2_SIZE                    (16U)
 
 /*  Marker for high priority data. true: Block contains immediate data.
  *  false: Block does not contain immediate data.
