@@ -141,8 +141,8 @@ void Ea_Init(const Ea_ConfigType* ConfigPtr )
 /*    Function Description    : Reads Length bytes of block Blocknumber at offset       */
 /*                              BlockOffset into the buffer DataBufferPtr               */
 /*    Parameter in            : BlockNumber , BlockOffset , Length                      */
-/*    Parameter inout         : DataBufferPtr                                           */
-/*    Parameter out           : none                                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : DataBufferPtr                                           */
 /*    Return value            : Std_ReturnType                                          */
 /*    Requirment              : SWS_Ea_00086                                            */
 /*    Notes                   :                                                         */
@@ -159,14 +159,11 @@ Std_ReturnType Ea_Read(uint16 BlockNumber,uint16 BlockOffset,uint8* DataBufferPt
      *  the function Ea_Read shall check if the module state is MEMIF_UNINIT.
      *  If this is the case, the function Ea_Read shall reject the read request,
      *  raise the development error EA_E_UNINIT and return with E_NOT_OK.  (SRS_BSW_00406)
-     *  [SWS_Ea_00167] The function Ea_Read shall check if the module state is MEMIF_BUSY.
-     *  If this is the case, the function Ea_Read shall reject the read request,
-     *  raise the runtime error EA_E_BUSY and return with E_NOT_OK.
-     *   */
-    if(EA_ModuleState == MEMIF_BUSY || EA_ModuleState == MEMIF_UNINIT)
+     */
+    if(EA_ModuleState == MEMIF_UNINIT)
     {
         #if(EA_DEV_ERROR_DETECT == STD_ON)
-            Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_READ_API_ID, EA_E_BUSY);
+            Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_READ_API_ID, EA_E_UNINIT);
         #endif
 
         return E_NOT_OK ;
@@ -194,6 +191,17 @@ Std_ReturnType Ea_Read(uint16 BlockNumber,uint16 BlockOffset,uint8* DataBufferPt
 
         return E_NOT_OK ;
     }
+    /*[SWS_Ea_00167] The function Ea_Read shall check if the module state is MEMIF_BUSY.
+     * If this is the case, the function Ea_Read shall reject the read request,
+     * raise the runtime error EA_E_BUSY and return with E_NOT_OK.
+     */
+    else if(EA_ModuleState == MEMIF_BUSY)
+    {
+        /*report error to DEM Module to report runtime error*/
+
+        return E_NOT_OK ;
+    }
+
     /* Get Block configured size
      * Each block number depends on the previous preserved virtual pages for the previous blocks
      * [SWS_Ea_00005]Each configured logical block shall take up an integer multiple of the configured
@@ -255,6 +263,123 @@ Std_ReturnType Ea_Read(uint16 BlockNumber,uint16 BlockOffset,uint8* DataBufferPt
 
         /*Set current job to reading*/
         JobProcessing_State = READ_JOB ;
+
+        /*Set module state to busy*/
+        EA_ModuleState = MEMIF_BUSY ;
+
+        /*Set current job result to pending*/
+        JobResult = MEMIF_JOB_PENDING ;
+    }
+    return E_OK ;
+}
+
+
+/****************************************************************************************/
+/*    Function Name           : Ea_Write                                                */
+/*    Function Description    : Writes the contents of the DataBufferPtr to             */
+/*                              the block BlockNumber.                                  */
+/*    Parameter in            : BlockNumber ,DataBufferPtr                              */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : Std_ReturnType                                          */
+/*    Requirment              : SWS_Ea_00087                                            */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
+Std_ReturnType Ea_Write( uint16 BlockNumber,const uint8* DataBufferPtr )
+{
+    uint16 BlockSize  = 0;
+    uint16 Sum        = 0;
+    uint16 BlockCount = 0;
+
+    /*[SWS_Ea_00181] If the current module status is MEMIF_UNINIT or MEMIF_BUSY,
+     * the function Ea_Write shall reject the job request and return with E_NOT_OK.
+     *(SRS_MemHwAb_14010)
+     */
+    if(EA_ModuleState == MEMIF_UNINIT)
+    {
+        #if(EA_DEV_ERROR_DETECT == STD_ON)
+            Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_WRITE_API_ID, EA_E_UNINIT);
+        #endif
+
+        return E_NOT_OK ;
+    }
+
+    /*[SWS_Ea_00172] If development error detection is enabled for the module:
+     * the function Ea_Write shall check that the given data pointer is valid
+     * (i.e. that it is not NULL). If this is not the case, the function
+     * Ea_Write shall reject the write request, raise the development error
+     * EA_E_PARAM_POINTER and return with E_NOT_OK.  (SRS_BSW_00323)
+     */
+    else if(DataBufferPtr == NULL_PTR)
+    {
+        #if(EA_DEV_ERROR_DETECT == STD_ON)
+            Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_WRITE_API_ID, EA_E_PARAM_POINTER);
+        #endif
+
+        return E_NOT_OK ;
+    }
+    /*[SWS_Ea_00181] If the current module status is MEMIF_UNINIT or MEMIF_BUSY,
+     * the function Ea_Write shall reject the job request and return with E_NOT_OK.
+     *(SRS_MemHwAb_14010)
+     */
+    else if(EA_ModuleState == MEMIF_BUSY)
+    {
+        /*Call DEM module to report runtime error*/
+
+        return E_NOT_OK ;
+    }
+
+
+    /*
+    * [SWS_Ea_00147]If development error detection is enabled for the module:
+    * the function Ea_Read shall check whether the given block number is valid
+    *  (i.e. inside the configured range)
+    */
+    else if((BlockNumber < MODULE_LOGICAL_START_ADDRESS) || (BlockNumber > MODULE_LOGICAL_END_ADDRESS))
+    {
+        #if(EA_DEV_ERROR_DETECT == STD_ON)
+            Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_WRITE_API_ID, EA_E_INVALID_BLOCK_NO);
+        #endif
+
+        return E_NOT_OK ;
+    }
+    /*
+     * NO Errors Then:
+     * Calculate physical Address
+     * Put Length equal to configured size for this block
+     * Copy Parameters to be used in the main function
+     */
+    else
+    {
+       /* Get Block configured size
+        * Each block number depends on the previous preserved virtual pages for the previous blocks
+        * [SWS_Ea_00005]Each configured logical block shall take up an integer multiple of the configured
+        * virtual page size (see also Chapter 10.2.3, configuration parameter EA_VIRTUAL_PAGE_SIZE .
+        * [SWS_Ea_00068]  Logical blocks must not overlap each other and must not be contained
+        *  within one another.  (SRS_MemHwAb_14001)
+        * */
+        for(BlockCount = 0 ;BlockCount <BLOCKS_NUM ; BlockCount++)
+        {
+            if((BlockNumber-MODULE_LOGICAL_START_ADDRESS) == Sum)
+            {
+               /*Get Block size in bytes*/
+                BlockSize = EA_BlocksSize[BlockCount] ;
+                break;
+            }
+            else
+            {
+              /*Add the number of previous occupied pages */
+               Sum+= EA_BlocksSize[BlockCount] / EA_VIRTUAL_PAGE_SIZE ;
+            }
+        }
+
+        /*Save Parameters to be used in the main function*/
+        ParametersCopy.PhysicalStartAddress = CALC_PHSICAL_W_ADD(BlockNumber) ;
+        ParametersCopy.Len        = BlockSize ;
+        ParametersCopy.DataBufPtr =(uint8*) DataBufferPtr ;
+
+        /*Set current job to reading*/
+        JobProcessing_State = WRITE_JOB ;
 
         /*Set module state to busy*/
         EA_ModuleState = MEMIF_BUSY ;
