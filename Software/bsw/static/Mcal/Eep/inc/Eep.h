@@ -125,10 +125,14 @@ typedef struct
     EepInitConfiguration* EepInitConfigurationRef;
 }Eep_ConfigType;
 
-
+/*******************************************************************************/
+//  Functions Prototypes
+/*******************************************************************************/
 void Eep_Init( const Eep_ConfigType* ConfigPtr );
 Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_LengthType Length );
 Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferPtr,Eep_LengthType Length );
+void Eep_Cancel(void);
+
 #endif /* EEP_H_ */
 
 

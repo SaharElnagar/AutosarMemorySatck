@@ -378,7 +378,7 @@ Std_ReturnType Ea_Write( uint16 BlockNumber,const uint8* DataBufferPtr )
         ParametersCopy.Len        = BlockSize ;
         ParametersCopy.DataBufPtr =(uint8*) DataBufferPtr ;
 
-        /*Set current job to reading*/
+        /*Set current job to writing*/
         JobProcessing_State = WRITE_JOB ;
 
         /*Set module state to busy*/
@@ -388,4 +388,102 @@ Std_ReturnType Ea_Write( uint16 BlockNumber,const uint8* DataBufferPtr )
         JobResult = MEMIF_JOB_PENDING ;
     }
     return E_OK ;
+}
+
+/****************************************************************************************/
+/*    Function Name           : Ea_Cancel                                               */
+/*    Function Description    : Cancels the ongoing asynchronous operation              */
+/*    Parameter in            : none                                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : none                                                    */
+/*    Requirment              : SWS_Ea_00088                                            */
+/*    Notes                   : The cancel functions shall only reset their modules     */
+/*                              internal variables so that a new job can be accepted    */
+/*                              by the modules.                                         */
+/****************************************************************************************/
+void Ea_Cancel(void)
+{
+    /*[SWS_Ea_00132] If development error detection for the module EA is enabled:
+     * the function Ea_Cancel shall check if the module state is MEMIF_UNINIT.
+     * If this is the case, the function Ea_Cancel shall raise the development
+     * error EA_E_UNINIT and return to the caller without changing any internal variables.
+     *  (SRS_BSW_00406)
+     *  */
+    if(EA_ModuleState == MEMIF_UNINIT)
+     {
+         #if(EA_DEV_ERROR_DETECT == STD_ON)
+             Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_CANCEL_API_ID, EA_E_UNINIT);
+         #endif
+     }
+
+    /*[SWS_Ea_00173] If the current module status is not MEMIF_BUSY
+     * (i.e. there is no job to cancel and therefore the request to cancel
+     *  a pending job is rejected by the function Ea_Cancel), the function
+     *  Ea_Cancel shall raise the runtime error EA_E_INVALID_CANCEL.
+     *(SRS_BSW_00323)
+     */
+    else if(EA_ModuleState != MEMIF_BUSY)
+    {
+         /*Report Runtime error to DEM Module EA_E_INVALID_CANCEL*/
+    }
+
+    /*
+     * [SWS_Ea_00077] If the current module status is MEMIF_BUSY
+     *  (i.e. the request to cancel a pending job is accepted by the function Ea_Cancel),
+     *  the function Ea_Cancel shall call the cancel function of the underlying EEPROM driver.
+     * (SRS_MemHwAb_14031)
+     */
+    else
+    {
+        /*[SWS_Ea_00078] If the current module status is MEMIF_BUSY
+         * (i.e. the request to cancel a pending job is accepted by the function Ea_Cancel),
+         * the function Ea_Cancel shall reset the EA module’s internal variables to make
+         * the module ready for a new job request. I.e. the function Ea_Cancel shall set
+         * the job result to MEMIF_JOB_CANCELED and the module status to MEMIF_IDLE.
+         * (SRS_MemHwAb_14031)
+         */
+
+        /*Set current job to writing*/
+        JobProcessing_State = IDLE_JOB ;
+
+        /*Set module state to busy*/
+        EA_ModuleState = MEMIF_IDLE ;
+
+        /*Set current job result to pending*/
+        JobResult = MEMIF_JOB_CANCELED ;
+
+        /*call the cancel function of the underlying EEPROM driver*/
+        Eep_Cancel();
+    }
+}
+
+/****************************************************************************************/
+/*    Function Name           : Ea_GetStatus                                            */
+/*    Function Description    : Service to return the Status.                           */
+/*    Parameter in            : none                                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : MemIf_StatusType                                        */
+/*    Requirment              : SWS_Ea_00089                                            */
+/*    Notes                   : none                                                    */
+/****************************************************************************************/
+MemIf_StatusType Ea_GetStatus(void)
+{
+    return EA_ModuleState ;
+}
+
+/****************************************************************************************/
+/*    Function Name           : Ea_GetJobResult                                         */
+/*    Function Description    : Service to return the JobResult.                        */
+/*    Parameter in            : none                                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : MemIf_StatusType                                        */
+/*    Requirment              : SWS_Ea_00090                                            */
+/*    Notes                   : none                                                    */
+/****************************************************************************************/
+MemIf_JobResultType Ea_GetJobResult(void)
+{
+    return JobResult ;
 }

@@ -764,6 +764,18 @@ static void Eep_MainFunction_Read(void)
               /*Report Production Error to DEM :  EEP_E_READ_FAILED */
               JobResult  = MEMIF_JOB_FAILED ;
               StatusType = MEMIF_IDLE   ;
+              /*[SWS_Eep_00046] The Eep module shall call the callback function
+               *  defined in the configuration parameter EepJobErrorNotification
+               *  when a job has been canceled or aborted with negative result
+               */
+              if(Global_Config->EepInitConfigurationRef->EepJobErrorNotification != NULL_PTR)
+              {
+                  Global_Config->EepInitConfigurationRef->EepJobErrorNotification();
+              }
+              else
+              {
+                  /*MISRA RULE*/
+              }
               break;
           }
           if(ByteNum == PHYSICAL_WORD_SIZE)
@@ -880,6 +892,19 @@ static void Eep_MainFunction_Write(void)
                  /*Report Production Error to DEM :  EEP_E_WRITE_FAILED */
                   JobResult  = MEMIF_JOB_FAILED ;
                   StatusType = MEMIF_IDLE   ;
+
+                  /*[SWS_Eep_00046] The Eep module shall call the callback function
+                   *  defined in the configuration parameter EepJobErrorNotification
+                   *  when a job has been canceled or aborted with negative result
+                   */
+                  if(Global_Config->EepInitConfigurationRef->EepJobErrorNotification != NULL_PTR)
+                  {
+                      Global_Config->EepInitConfigurationRef->EepJobErrorNotification();
+                  }
+                  else
+                  {
+                      /*MISRA RULE*/
+                  }
                   break;
              }
              else
@@ -969,6 +994,19 @@ static void Eep_MainFunction_Erase(void)
         /*Report Production Error to DEM :  EEP_E_ERASE_FAILED */
         JobResult  = MEMIF_JOB_FAILED ;
         StatusType = MEMIF_IDLE   ;
+
+        /*[SWS_Eep_00046] The Eep module shall call the callback function
+         *  defined in the configuration parameter EepJobErrorNotification
+         *  when a job has been canceled or aborted with negative result
+         */
+        if(Global_Config->EepInitConfigurationRef->EepJobErrorNotification != NULL_PTR)
+        {
+            Global_Config->EepInitConfigurationRef->EepJobErrorNotification();
+        }
+        else
+        {
+            /*MISRA RULE*/
+        }
     }
     else
     {
@@ -1041,6 +1079,19 @@ static void Eep_MainFunction_Compare(void)
                  /*Report Production Error to DEM :  EEP_E_Compare_FAILED */
                   JobResult  = MEMIF_JOB_FAILED ;
                   StatusType = MEMIF_IDLE   ;
+
+                  /*[SWS_Eep_00046] The Eep module shall call the callback function
+                   *  defined in the configuration parameter EepJobErrorNotification
+                   *  when a job has been canceled or aborted with negative result
+                   */
+                  if(Global_Config->EepInitConfigurationRef->EepJobErrorNotification != NULL_PTR)
+                  {
+                      Global_Config->EepInitConfigurationRef->EepJobErrorNotification();
+                  }
+                  else
+                  {
+                      /*MISRA RULE*/
+                  }
                   break;
              }
           }
