@@ -95,5 +95,13 @@
 /*Reference to the device this block is stored in*/
 #define  _DEVICE_INDEX                        (0U)
 
+/* ECUC_Ea_00122 :   EaNvmJobErrorNotification
+ * Mapped to the job error notification routine provided by the upper layer
+ * module (NvM_JobErrorNotification).*/
+#define EaNvmJobErrorNotification           NvM_JobErrorNotification
 
+/* ECUC_Ea_00121 :  EaNvmJobEndNotification
+ * Mapped to the job end notification routine provided by the upper layer
+ * module (NvM_JobEndNotification) */
+#define EaNvmJobEndNotification             NvM_JobEndNotification
 #endif /* EEP_CFG_H_ */

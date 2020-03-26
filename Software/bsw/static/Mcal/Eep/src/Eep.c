@@ -85,7 +85,7 @@
 /*                                   Local types Definition                              */
 /*****************************************************************************************/
 /*****************************************************************************************/
-/*                                   Local Function Declaration                          */
+/*                                   Local Function Definitions                          */
 /*****************************************************************************************/
 static void SysCtlDelay(uint32  ui32Count) ;
 static void SysCtlPeripheralReset(uint32  ui32Peripheral);
@@ -233,13 +233,15 @@ static MemIf_StatusType   StatusType = MEMIF_UNINIT;
 
 static MemIf_JobResultType JobResult = MEMIF_JOB_OK;
 
-static Eep_ConfigType* Global_Config = NULL_PTR ;
+static const Eep_ConfigType* Global_Config = NULL_PTR ;
 
 static MemIf_ModeType  ModeType = MEMIF_MODE_SLOW ;
 
 
 void Eep_Init( const Eep_ConfigType* ConfigPtr )
 {
+
+    /*Check REgister EEPROMSoftwareReset(SREEPROM),offset0x558 to Reset EEPROM*/
     uint32 Status;
    /*Report error to DET module if pointer parameter has a NULL value*/
     #if(EepDevErrorDetect == STD_ON)
@@ -250,7 +252,7 @@ void Eep_Init( const Eep_ConfigType* ConfigPtr )
     #endif
 
    /*Save parameter ConfigPtr to be used in other functions */
-    Global_Config = (Eep_ConfigType*) ConfigPtr ;
+    Global_Config =  ConfigPtr ;
 
    /*
     * Insert a small delay (6 cycles + call overhead) to guard against the
