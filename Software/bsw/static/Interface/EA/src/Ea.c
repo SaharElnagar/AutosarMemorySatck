@@ -544,6 +544,20 @@ MemIf_JobResultType Ea_GetJobResult(void)
 }
 
 /****************************************************************************************/
+/*    Function Name           : Ea_InvalidateBlock                                      */
+/*    Function Description    : Invalidates the block BlockNumber.                      */
+/*    Parameter in            : BlockNumber                                             */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : Std_ReturnType                                          */
+/*    Requirment              : SWS_Ea_00091                                            */
+/*    Notes                   : SRS_MemHwAb_14028                                       */
+/****************************************************************************************/
+Std_ReturnType Ea_InvalidateBlock(uint16 BlockNumber)
+{
+
+}
+/****************************************************************************************/
 /*    Function Name           : Ea_MainFunction                                         */
 /*     Function Description    : Service to handle the requested jobs and the internal   */
 /*                              management operations                                   */
