@@ -318,7 +318,6 @@ void Eep_Init( const Eep_ConfigType* ConfigPtr )
        *  to MEMIF_JOB_OK.(SRS_BSW_00406)*/
        StatusType = MEMIF_IDLE ;
        JobResult  = MEMIF_JOB_OK ;
-
 }
 
 void Eep_SetMode( MemIf_ModeType Mode )

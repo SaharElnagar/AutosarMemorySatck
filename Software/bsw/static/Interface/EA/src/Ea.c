@@ -556,6 +556,7 @@ MemIf_JobResultType Ea_GetJobResult(void)
 Std_ReturnType Ea_InvalidateBlock(uint16 BlockNumber)
 {
 
+    return E_OK ;
 }
 /****************************************************************************************/
 /*    Function Name           : Ea_MainFunction                                         */
