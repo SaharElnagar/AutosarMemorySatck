@@ -9,17 +9,27 @@
 #define BSW_STATIC_SERVICE_NVM_TYPES_H_
 
 #include "Std_Types.h"
-typedef uint8 NvMBlockCrcType ;
+typedef uint8 NvMBlockCrcType;
 #define NVM_CRC16       ((NvMBlockCrcType)0U)
 #define NVM_CRC32       ((NvMBlockCrcType)1U)
 #define NVM_CRC8        ((NvMBlockCrcType)2U)
 
-typedef uint8 NvMBlockManagementType
+typedef uint8 NvMBlockManagementType;
 #define NVM_BLOCK_DATASET   ((NvMBlockManagementType)0U)
 #define NVM_BLOCK_NATIVE    ((NvMBlockManagementType)1U)
 #define NVM_BLOCK_REDUNDANT ((NvMBlockManagementType)2U)
 
+typedef uint8 NvM_RequestResultType;
+#define NVM_REQ_OK                   ((NvM_RequestResultType)0U)
+#define NVM_REQ_NOT_OK               ((NvM_RequestResultType)1U)
+#define NVM_REQ_PENDING              ((NvM_RequestResultType)2U)
+#define NVM_REQ_INTEGRITY_FAILED     ((NvM_RequestResultType)3U)
+#define NVM_REQ_BLOCK_SKIPPED        ((NvM_RequestResultType)4U)
+#define NVM_REQ_NV_INVALIDATED       ((NvM_RequestResultType)5U)
+#define NVM_REQ_CANCELED             ((NvM_RequestResultType)6U)
+#define NVM_REQ_RESTORED_FROM_ROM    ((NvM_RequestResultType)8U)
 
+typedef uint16 NvM_BlockIdType;
 
 typedef struct
 {
@@ -28,7 +38,7 @@ typedef struct
 }NvMTargetBlockReferenceType ;
 /*****************************************************************************************/
 /* ECUC_NvM_00061 :  NvMBlockDescriptor
-/* Container for a management structure to configure the composition of a given
+ * Container for a management structure to configure the composition of a given
  * NVRAM Block Management Type. Its multiplicity describes the number of configured
  * NVRAM blocks, one block is required to be configured. The NVRAM block descriptors
  *  are condensed in the NVRAM block descriptor table.
