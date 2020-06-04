@@ -50,6 +50,7 @@
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/static/Infrastructure/inc"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/gen"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/static/Infrastructure/platform/inc"/>
+									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/static/Service/NvM/inc"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/stub"/>
 									<listOptionValue builtIn="false" value="${CG_TOOL_ROOT}/include"/>
 								</option>

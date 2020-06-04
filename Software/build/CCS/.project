@@ -28,7 +28,7 @@
 		<link>
 			<name>bsw</name>
 			<type>2</type>
-			<location>R:/MyAutosar/MemoryStack/Software/bsw</location>
+			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/bsw</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
