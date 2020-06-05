@@ -264,3 +264,4 @@ typedef struct
 
 
 #endif /* BSW_STATIC_SERVICE_NVM_TYPES_H_ */
+
