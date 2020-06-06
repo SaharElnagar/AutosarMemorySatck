@@ -55,6 +55,8 @@ extern NvMBlockDescriptorType NvMBlockDescriptor[NUMBER_OF_NVM_BLOCKS];
 /**************************Internal Functions' Prototypes**************************/
 static Std_ReturnType Job_Enqueue(Job_Parameters Job);
 static Std_ReturnType Job_Dequeue(Job_Parameters* Job);
+static void Queue_Init(void);
+static _Bool Search_Queue(NvM_BlockIdType BlockId);
 
 /*****************************Local Variables*****************************/
 // standard job queue
@@ -81,10 +83,10 @@ static _Bool Immediate_Queue_FULL = FALSE;
 /***************************************************************************/
 Std_ReturnType Job_Enqueue(Job_Parameters Job)
 { 
-  #if (NVM_JOB_PRIORITIZATION == STD_ON)
+
   // Immediate Job
   if(NvMBlockDescriptor[Job.Block_Id].NvMBlockJobPriority == 0){
-
+    #if (NVM_JOB_PRIORITIZATION == STD_ON)
     if(Immediate_Queue_FULL == TRUE){
       return E_NOT_OK;
     }
@@ -107,8 +109,9 @@ Std_ReturnType Job_Enqueue(Job_Parameters Job)
       Immediate_Queue_FULL = TRUE;
     }
     return E_OK;
+    #endif
   }
-  #endif
+
   // Standard Job
   else{
 
@@ -124,7 +127,7 @@ Std_ReturnType Job_Enqueue(Job_Parameters Job)
     else{ // Queue is not full and not empty
 			
 	    #if (NVM_JOB_PRIORITIZATION == STD_ON)
-	    uint8 i;   //internal variable to store the loop index
+	    uint16 i;   //internal variable to store the loop index
 	    //intermediate variable to store ID of the compared job in each cycle
 		NvM_BlockIdType Compared_Job_Id;
 				
@@ -171,17 +174,18 @@ Std_ReturnType Job_Enqueue(Job_Parameters Job)
     if(Stand_Queue_Indeces.Tail == Stand_Queue_Indeces.Head){
       Standard_Queue_FULL = TRUE;
     }
-    return E_OK;
   }
+  return E_OK;
 }
 
 /***************************************************************************/
 
 Std_ReturnType Job_Dequeue(Job_Parameters* Job)
 {
-  #if (NVM_JOB_PRIORITIZATION == STD_ON)
+ #if (NVM_JOB_PRIORITIZATION == STD_ON)
   //Immediate queue is not empty, so dequeue immediate job
   if(Immediate_Queue_Empty == FALSE){
+
     *Job = Immediate_Job_Queue[Immed_Queue_Indeces.Head];
     Immediate_Job_Queue[Immed_Queue_Indeces.Head].Block_Id = 0;
     Immediate_Job_Queue[Immed_Queue_Indeces.Head].Job_Type = NO_JOB;
@@ -203,9 +207,9 @@ Std_ReturnType Job_Dequeue(Job_Parameters* Job)
     return E_OK;
 
   }
-  #endif
+ #endif
   //Immediate queue is empty and standard queue is empty, so return error
-  else if(Standard_Queue_Empty == TRUE){
+  if(Standard_Queue_Empty == TRUE){
     return E_NOT_OK;
   }
   //Immediate queue is empty and standard queue is not empty,
@@ -236,5 +240,58 @@ Std_ReturnType Job_Dequeue(Job_Parameters* Job)
 }
 /***************************************************************************/
 
+static void Queue_Init(void)
+{
+    uint16 i;
 
+    Stand_Queue_Indeces.Head = 0;
+    Stand_Queue_Indeces.Tail = 0;
 
+    Standard_Queue_Empty = TRUE;
+    Standard_Queue_FULL = FALSE;
+
+#if(NVM_JOB_PRIORITIZATION == STD_ON)
+    Immed_Queue_Indeces.Head = 0;
+    Immed_Queue_Indeces.Tail = 0;
+
+    Immediate_Queue_Empty = TRUE;
+    Immediate_Queue_FULL = FALSE;
+#endif
+
+    for(i = 0; i < NVM_SIZE_STANDARD_JOB_QUEUE; i++){
+        Standard_Job_Queue[i].Job_Type = NO_JOB;
+        Standard_Job_Queue[i].Block_Id = 0;
+        Standard_Job_Queue[i].RAM_Ptr = NULL;
+    }
+#if(NVM_JOB_PRIORITIZATION == STD_ON)
+    for(i = 0; i < NVM_SIZE_IMMEDIATE_JOB_QUEUE; i++){
+        Immediate_Job_Queue[i].Job_Type = NO_JOB;
+        Immediate_Job_Queue[i].Block_Id = 0;
+        Immediate_Job_Queue[i].RAM_Ptr = NULL;
+    }
+#endif
+}
+
+/***************************************************************************/
+
+static _Bool Search_Queue(NvM_BlockIdType BlockId)
+{
+    uint16 i;
+
+#if(NVM_JOB_PRIORITIZATION == STD_ON)
+    for(i = 0; i < NVM_SIZE_IMMEDIATE_JOB_QUEUE; i++){
+        if(Immediate_Job_Queue[i].Block_Id == BlockId){
+           return TRUE;
+        }
+    }
+#endif
+    for(i = 0; i < NVM_SIZE_STANDARD_JOB_QUEUE; i++){
+       if(Standard_Job_Queue[i].Block_Id == BlockId){
+          return TRUE;
+       }
+    }
+
+    return FALSE;
+}
+
+/***************************************************************************/

@@ -26,6 +26,21 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>NvM.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/bsw/static/Service/NvM/src/NvM.c</locationURI>
+		</link>
+		<link>
+			<name>NvM.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/bsw/static/Service/NvM/inc/NvM.h</locationURI>
+		</link>
+		<link>
+			<name>NvM_Types.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/bsw/static/Service/NvM/inc/NvM_Types.h</locationURI>
+		</link>
+		<link>
 			<name>bsw</name>
 			<type>2</type>
 			<location>R:/MyAutosar/MemoryStack/Software/bsw</location>

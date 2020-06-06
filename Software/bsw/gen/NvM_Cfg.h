@@ -76,7 +76,7 @@
  *true: Job prioritization handling enabled.
  *false: Job prioritization handling disabled.
  */
-#define NVM_JOB_PRIORITIZATION              STD_ON
+#define NVM_JOB_PRIORITIZATION              STD_OFF
 
 /* ECUC_NvM_00500
  * Entry address of the common callback routine which shall be invoked on termination
