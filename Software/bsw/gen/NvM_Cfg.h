@@ -8,7 +8,7 @@
 #ifndef BSW_GEN_NVM_CFG_H_
 #define BSW_GEN_NVM_CFG_H_
 
-
+#include "Std_types.h"
 
 /*****************************************************************************************/
 /*                                  NvMCommon Container                                  */
@@ -52,7 +52,7 @@
  * true: detection and notification is enabled.
  * false: detection and notification is disabled.
  */
-#define NVM_DEV_ERROR_DETECT
+#define NVM_DEV_ERROR_DETECT                    STD_ON
 
 /*ECUC_NvM_00496
  *Preprocessor switch to enable switching memory drivers to fast mode during performing
@@ -110,7 +110,7 @@
 /*                                 NvMBlockDescriptor                                    */
 /*****************************************************************************************/
 
-#define NUMBER_OF_NVM_BLOCKS                (1U)
+#define NUMBER_OF_NVM_BLOCKS                (3U)
 
 /*ECUC_NvM_00481
  * Identification of a NVRAM block via a unique block identifier. Implementation Type: NvM_BlockIdType.

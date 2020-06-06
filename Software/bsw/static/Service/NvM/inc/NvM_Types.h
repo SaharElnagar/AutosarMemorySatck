@@ -43,6 +43,12 @@ typedef uint8 NvM_RequestResultType ;
  */
 typedef uint16 NvM_BlockIdType ;
 
+/* Since this type is used for compliance purposes only
+ * (meaning that NvM_Init will now have a pointer to this type as parameter, based on SWS_BSW_00047)
+ * it will be left to the developer to chose how to implement it, considering it has no use for the
+ * NvM module in any way
+ */
+typedef void NvM_ConfigType ;
 
 /*[SWS_NvM_00848]*/
 typedef const void* ConstVoidPtr;
