@@ -1,0 +1,4 @@
+bsw/stub/stub.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/stub/stub.c
+bsw/stub/stub.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/static/Infrastructure/inc/Platform_Types.h
+bsw/stub/stub.obj: D:\Graduation\\ Project\NvM_Dev\AutosarMemorySatck\Software\bsw\stub\Det.h
+bsw/stub/stub.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/static/Infrastructure/inc/Std_Types.h
