@@ -277,21 +277,24 @@ static void Queue_Init(void)
 static _Bool Search_Queue(NvM_BlockIdType BlockId)
 {
     uint16 i;
+    _Bool Return_Val = FALSE;
 
     #if(NVM_JOB_PRIORITIZATION == STD_ON)
         for(i = 0; i < NVM_SIZE_IMMEDIATE_JOB_QUEUE; i++){
            if(Immediate_Job_Queue[i].Block_Id == BlockId){
-              return TRUE;
+               Return_Val = TRUE;
+               break;
            }
         }
     #endif
     for(i = 0; i < NVM_SIZE_STANDARD_JOB_QUEUE; i++){
        if(Standard_Job_Queue[i].Block_Id == BlockId){
-          return TRUE;
+           Return_Val = TRUE;
+           break;
        }
     }
 
-    return FALSE;
+    return Return_Val;
 }
 
 /***************************************************************************/
