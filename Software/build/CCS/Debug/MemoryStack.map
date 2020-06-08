@@ -1,7 +1,7 @@
 ******************************************************************************
-                  TI ARM Linker PC v18.12.4                    
+                  TI ARM Linker PC v18.12.2                    
 ******************************************************************************
->> Linked Tue Jun  9 01:15:46 2020
+>> Linked Tue Jun  9 01:38:52 2020
 
 OUTPUT FILE NAME:   <MemoryStack.out>
 ENTRY POINT SYMBOL: "_c_int00_noinit_noargs"  address: 0000026d
@@ -60,7 +60,7 @@ MODULE SUMMARY
     +--+------------------------------+------+---------+---------+
        Total:                         16     620       0      
                                                               
-    C:\ti\ccs930\ccs\tools\compiler\ti-cgt-arm_18.12.4.LTS\lib\rtsv7M4_T_le_v4SPD16_eabi.lib
+    C:\ti\ccs910\ccs\tools\compiler\ti-cgt-arm_18.12.2.LTS\lib\rtsv7M4_T_le_v4SPD16_eabi.lib
        boot_cortex_m.c.obj            44     0         0      
        exit.c.obj                     4      0         0      
        pre_init.c.obj                 4      0         0      

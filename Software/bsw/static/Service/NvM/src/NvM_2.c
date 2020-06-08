@@ -31,7 +31,7 @@
 /*    Return value            : none                                                    */
 /****************************************************************************************/
 
-static void Init_Queue(void)
+void Init_Queue(void)
 {
     /*counter to loop over queue elements*/
     uint16 counter;
@@ -74,11 +74,11 @@ static void Init_Queue(void)
 /*    Return value            : _Bool                                                   */
 /****************************************************************************************/
 
-static _Bool Search_Queue(NvM_BlockIdType BlockId)
+Std_ReturnType Search_Queue(NvM_BlockIdType BlockId)
 {
     /*counter to loop over queue elements*/
     uint16 counter;
-    _Bool Return_Val = FALSE;
+    Std_ReturnType Return_Val = FALSE;
 
     #if(NVM_JOB_PRIORITIZATION == STD_ON)
         for(counter = 0; counter < NVM_SIZE_IMMEDIATE_JOB_QUEUE; counter++){
@@ -107,7 +107,7 @@ static _Bool Search_Queue(NvM_BlockIdType BlockId)
 /*    Return value            : Std_ReturnType                                          */
 /****************************************************************************************/
 
-static Std_ReturnType Job_Enqueue(Job_Parameters Job)
+Std_ReturnType Job_Enqueue(Job_Parameters Job)
 {
 
   /*[SWS_NvM_00378]
@@ -228,7 +228,7 @@ static Std_ReturnType Job_Enqueue(Job_Parameters Job)
 /*    Return value            : Std_ReturnType                                          */
 /****************************************************************************************/
 
-static Std_ReturnType Job_Dequeue(Job_Parameters* Job)
+Std_ReturnType Job_Dequeue(Job_Parameters* Job)
 {
  #if (NVM_JOB_PRIORITIZATION == STD_ON)
    //Immediate queue is not empty, so dequeue immediate job

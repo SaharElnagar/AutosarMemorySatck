@@ -45,7 +45,7 @@
  *0: No dataset or redundant NVRAM blocks are configured at all, no selection bits required.
  *1: In case of redundant NVRAM blocks are configured, but no dataset NVRAM blocks.
  */
-#define NVM_DATASET_SELECTION_BITS
+#define NVM_DATASET_SELECTION_BITS              (0x02U)
 
 /*ECUC_NvM_00495
  *Switches the development error detection and notification on or off.

@@ -32,9 +32,8 @@ typedef uint8 ModuleStateType;
 typedef struct
 {
     uint8 DataSetIndex ;
-    uint8 BlockStatus ;
+    NvM_RequestResultType BlockStatus ;
     uint8 PRAMStatus ;
-    uint8 LastRequestStatus ;
     _Bool WriteProtect ;
 }AdministrativeBlockType;
 
@@ -73,14 +72,29 @@ typedef struct{
 #define MODULE_UNINITIALIZED        ((ModuleStateType)0U)
 #define INIT_DONE                   ((ModuleStateType)1U)
 
+
+/*****************************************************************************************/
+/*                                   Local variables Definition                          */
+/*****************************************************************************************/
+
+/*Administrative block for each NVRAM block
+ *The “Administrative Block” is a “Basic Storage Object”.
+ *It resides in RAM. The  “Administrative Block” is a mandatory part of a “NVRAM Block”.
+ */
+static AdministrativeBlockType AdministrativeBlock[NUMBER_OF_NVM_BLOCKS];
+
+/*Variable to save module state*/
+static ModuleStateType ModuleState = MODULE_UNINITIALIZED ;
+
+
 /*****************************************************************************************/
 /*                                   Local Functions Prototypes                          */
 /*****************************************************************************************/
 
-static Std_ReturnType Job_Enqueue(Job_Parameters Job);
-static Std_ReturnType Job_Dequeue(Job_Parameters* Job);
-static void Init_Queue(void);
-static _Bool Search_Queue(NvM_BlockIdType BlockId);
+ Std_ReturnType Job_Enqueue(Job_Parameters Job);
+ Std_ReturnType Job_Dequeue(Job_Parameters* Job);
+ void Init_Queue(void);
+ Std_ReturnType Search_Queue(NvM_BlockIdType BlockId);
 
 /*****************************************************************************************/
 /*                                   external variables                                  */
