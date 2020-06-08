@@ -15,6 +15,10 @@
 #define	NULL	0
 #endif
 
+#ifndef NULL_PTR
+#define NULL_PTR  ((void*)0)
+#endif
+
 typedef struct {
 	uint16 vendorID;
 	uint16 moduleID;
