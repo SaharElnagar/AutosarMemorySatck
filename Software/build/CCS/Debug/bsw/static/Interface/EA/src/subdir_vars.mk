@@ -6,7 +6,7 @@ SHELL = cmd.exe
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-D:/Graduation\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/static/Interface/EA/src/Ea.c 
+R:/MyAutosar/MemoryStack/Software/bsw/static/Interface/EA/src/Ea.c 
 
 C_DEPS += \
 ./bsw/static/Interface/EA/src/Ea.d 
@@ -21,6 +21,6 @@ C_DEPS__QUOTED += \
 "bsw\static\Interface\EA\src\Ea.d" 
 
 C_SRCS__QUOTED += \
-"D:/Graduation Project/NvM_Dev/AutosarMemorySatck/Software/bsw/static/Interface/EA/src/Ea.c" 
+"R:/MyAutosar/MemoryStack/Software/bsw/static/Interface/EA/src/Ea.c" 
 
 
