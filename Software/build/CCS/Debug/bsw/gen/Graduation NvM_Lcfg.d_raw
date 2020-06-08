@@ -1,0 +1,5 @@
+bsw/gen/NvM_Lcfg.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/gen/NvM_Lcfg.c
+bsw/gen/NvM_Lcfg.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/static/Service/NvM/inc/NvM_Types.h
+bsw/gen/NvM_Lcfg.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/static/Infrastructure/inc/Std_Types.h
+bsw/gen/NvM_Lcfg.obj: D:\Graduation\\ Project\NvM_Dev\AutosarMemorySatck\Software\bsw\static\Infrastructure\inc\Platform_Types.h
+bsw/gen/NvM_Lcfg.obj: D:\Graduation\\ Project\NvM_Dev\AutosarMemorySatck\Software\bsw\gen\NvM_Cfg.h

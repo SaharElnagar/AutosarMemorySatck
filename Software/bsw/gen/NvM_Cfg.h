@@ -76,7 +76,7 @@
  *true: Job prioritization handling enabled.
  *false: Job prioritization handling disabled.
  */
-#define NVM_JOB_PRIORITIZATION
+#define NVM_JOB_PRIORITIZATION       STD_ON
 
 /* ECUC_NvM_00500
  * Entry address of the common callback routine which shall be invoked on termination
@@ -101,10 +101,17 @@
  * false: API NvM_SetRamBlockStatus disabled.*/
 #define NVM_SET_RAM_BLOCK_STATUS_API
 
+/* ECUC_NvM_00503
+ * Defines the number of queue entries for the immediate priority job queue.
+ *  If NVM_JOB_PRIORITIZATION is switched OFF this parameter shall be out of scope.
+ */
+#define NVM_SIZE_IMMEDIATE_JOB_QUEUE        (100U)
+
 /* ECUC_NvM_00504
  * Defines the number of queue entries for the standard job queue
  */
-#define NVM_SIZE_STANDARD_JOB_QUEUE
+#define NVM_SIZE_STANDARD_JOB_QUEUE         (100U)
+
 
 /*****************************************************************************************/
 /*                                 NvMBlockDescriptor                                    */

@@ -1,0 +1,9 @@
+bsw/static/Mcal/Eep/src/Eep.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/static/Mcal/Eep/src/Eep.c
+bsw/static/Mcal/Eep/src/Eep.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/static/Infrastructure/platform/inc/hw_types.h
+bsw/static/Mcal/Eep/src/Eep.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/static/Infrastructure/inc/Platform_Types.h
+bsw/static/Mcal/Eep/src/Eep.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/static/Infrastructure/platform/inc/hw_eeprom.h
+bsw/static/Mcal/Eep/src/Eep.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/stub/Det.h
+bsw/static/Mcal/Eep/src/Eep.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/static/Infrastructure/inc/Std_Types.h
+bsw/static/Mcal/Eep/src/Eep.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/static/Mcal/Eep/inc/Eep.h
+bsw/static/Mcal/Eep/src/Eep.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/gen/Eep_Cfg.h
+bsw/static/Mcal/Eep/src/Eep.obj: D:/Graduation\\ Project/NvM_Dev/AutosarMemorySatck/Software/bsw/static/Infrastructure/inc/MemIf_Types.h
