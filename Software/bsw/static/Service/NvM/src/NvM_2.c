@@ -13,78 +13,28 @@
 **                                                                            **
 *******************************************************************************/
 
-#include "NvM.h"
-#include "Det.h"
+/*****************************************************************************************/
+/*                                   Include headers                                     */
+/*****************************************************************************************/
+#include "NvM_Shared.h"
 
+/*****************************************************************************************/
+/*                       Local Functions Implementation                                  */
+/*****************************************************************************************/
 
-/*******************************************************************************/
-//          Enumeration Type Definitions
-/*******************************************************************************/
-typedef uint8 JOB_REQUEST_TYPE;
-#define NO_JOB                    ((JOB_REQUEST_TYPE)0U)
-#define READ_BLOCK                ((JOB_REQUEST_TYPE)1U)
-#define WRITE_BLOCK               ((JOB_REQUEST_TYPE)2U)
-#define RESTORE_BLOCK             ((JOB_REQUEST_TYPE)3U)
-#define ERASE_BLOCK               ((JOB_REQUEST_TYPE)4U)
-#define CANCEL_WRITE_ALL          ((JOB_REQUEST_TYPE)5U)
-#define INVALIDATE_BLOCK          ((JOB_REQUEST_TYPE)6U)
-#define READ_PRAM_BLOCK           ((JOB_REQUEST_TYPE)7U)
-#define WRITE_PRAM_BLOCK          ((JOB_REQUEST_TYPE)8U)
-#define RESTORE_PRAM_BLOCK        ((JOB_REQUEST_TYPE)9U)
-
-/*******************************************************************************/
-//          Structure Type Definitions
-/*******************************************************************************/
-
-/* struct to hold the parameters for the job request*/
-typedef struct{
-   JOB_REQUEST_TYPE Job_Type;
-   NvM_BlockIdType Block_Id;
-   void* RAM_Ptr;
-}Job_Parameters;
-
-/*struct to hold the indeces which point to the queue*/
-typedef struct{
-  uint16 Head;
-  uint16 Tail;
-}Queue_Indeces_Struct;
-
-/*****************************External Variables***********************************/
-extern NvMBlockDescriptorType NvMBlockDescriptor[NUMBER_OF_NVM_BLOCKS];
-
-/**************************Internal Functions' Prototypes**************************/
-static Std_ReturnType Job_Enqueue(Job_Parameters Job);
-static Std_ReturnType Job_Dequeue(Job_Parameters* Job);
-static void Init_Queue(void);
-static _Bool Search_Queue(NvM_BlockIdType BlockId);
-
-/*****************************Local Variables*****************************/
-// standard job queue
-static Job_Parameters Standard_Job_Queue[NVM_SIZE_STANDARD_JOB_QUEUE];
-static Queue_Indeces_Struct Stand_Queue_Indeces = {0, 0};
-
-// immediate job queue
-#if (NVM_JOB_PRIORITIZATION == STD_ON)
-  static Job_Parameters Immediate_Job_Queue[NVM_SIZE_IMMEDIATE_JOB_QUEUE];
-  static Queue_Indeces_Struct Immed_Queue_Indeces = {0, 0};
-#endif
-
-/**************Internal Flags**************/
-static _Bool Standard_Queue_Empty = TRUE;
-static _Bool Standard_Queue_FULL = FALSE;
-
-#if (NVM_JOB_PRIORITIZATION == STD_ON)
-  static _Bool Immediate_Queue_Empty = TRUE;
-  static _Bool Immediate_Queue_FULL = FALSE;
-#endif
-
-/***************************************************************************/
-/*********************Functions Implementation******************************/
-/***************************************************************************/
+/****************************************************************************************/
+/*    Function Name           : Init_Queue                                              */
+/*    Function Description    : put queue in it's initialized state                     */
+/*    Parameter in            : none                                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : none                                                    */
+/****************************************************************************************/
 
 static void Init_Queue(void)
 {
-    uint16 i;
+    /*counter to loop over queue elements*/
+    uint16 counter;
 
     Stand_Queue_Indeces.Head = 0;
     Stand_Queue_Indeces.Tail = 0;
@@ -100,37 +50,46 @@ static void Init_Queue(void)
       Immediate_Queue_FULL = FALSE;
     #endif
 
-    for(i = 0; i < NVM_SIZE_STANDARD_JOB_QUEUE; i++){
-        Standard_Job_Queue[i].Job_Type = NO_JOB;
-        Standard_Job_Queue[i].Block_Id = 0;
-        Standard_Job_Queue[i].RAM_Ptr = NULL;
+    for(counter = 0; counter < NVM_SIZE_STANDARD_JOB_QUEUE; counter++){
+        Standard_Job_Queue[counter].Job_Type = NO_JOB;
+        Standard_Job_Queue[counter].Block_Id = 0;
+        Standard_Job_Queue[counter].RAM_Ptr = NULL;
     }
     #if(NVM_JOB_PRIORITIZATION == STD_ON)
-        for(i = 0; i < NVM_SIZE_IMMEDIATE_JOB_QUEUE; i++){
-            Immediate_Job_Queue[i].Job_Type = NO_JOB;
-            Immediate_Job_Queue[i].Block_Id = 0;
-            Immediate_Job_Queue[i].RAM_Ptr = NULL;
+        for(counter = 0; counter < NVM_SIZE_IMMEDIATE_JOB_QUEUE; counter++){
+            Immediate_Job_Queue[counter].Job_Type = NO_JOB;
+            Immediate_Job_Queue[counter].Block_Id = 0;
+            Immediate_Job_Queue[counter].RAM_Ptr = NULL;
         }
     #endif
 }
 
-/***************************************************************************/
+/****************************************************************************************/
+/*    Function Name           : Search_Queue                                            */
+/*    Function Description    : Search for a passed Block Id                            */
+/*                              and find if it exists in the queue or not               */
+/*    Parameter in            : BlockId                                                 */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : _Bool                                                   */
+/****************************************************************************************/
 
 static _Bool Search_Queue(NvM_BlockIdType BlockId)
 {
-    uint16 i;
+    /*counter to loop over queue elements*/
+    uint16 counter;
     _Bool Return_Val = FALSE;
 
     #if(NVM_JOB_PRIORITIZATION == STD_ON)
-        for(i = 0; i < NVM_SIZE_IMMEDIATE_JOB_QUEUE; i++){
-           if(Immediate_Job_Queue[i].Block_Id == BlockId){
+        for(counter = 0; counter < NVM_SIZE_IMMEDIATE_JOB_QUEUE; counter++){
+           if(Immediate_Job_Queue[counter].Block_Id == BlockId){
                Return_Val = TRUE;
                break;
            }
         }
     #endif
-    for(i = 0; i < NVM_SIZE_STANDARD_JOB_QUEUE; i++){
-       if(Standard_Job_Queue[i].Block_Id == BlockId){
+    for(counter = 0; counter < NVM_SIZE_STANDARD_JOB_QUEUE; counter++){
+       if(Standard_Job_Queue[counter].Block_Id == BlockId){
            Return_Val = TRUE;
            break;
        }
@@ -139,12 +98,24 @@ static _Bool Search_Queue(NvM_BlockIdType BlockId)
     return Return_Val;
 }
 
-/***************************************************************************/
+/****************************************************************************************/
+/*    Function Name           : Job_Enqueue                                             */
+/*    Function Description    : Add jobs to the queue to be executed later              */
+/*    Parameter in            : Job                                                     */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : Std_ReturnType                                          */
+/****************************************************************************************/
 
 static Std_ReturnType Job_Enqueue(Job_Parameters Job)
 {
 
-  // Immediate Job
+  /*[SWS_NvM_00378]
+   * In case of priority based job processing order,
+   * the NvM module shall use two queues, one for immediate write jobs (crash data)
+   * another for all other jobs
+   */
+  // Case1 : Immediate Job
   if(NvMBlockDescriptor[Job.Block_Id].NvMBlockJobPriority == 0){
     #if (NVM_JOB_PRIORITIZATION == STD_ON)
       if(Immediate_Queue_FULL == TRUE){
@@ -172,7 +143,7 @@ static Std_ReturnType Job_Enqueue(Job_Parameters Job)
     #endif
   }
 
-  // Standard Job
+  // Case2 : Standard Job
   else{
 
     if(Standard_Queue_FULL == TRUE){
@@ -186,38 +157,48 @@ static Std_ReturnType Job_Enqueue(Job_Parameters Job)
     }
     else{ // Queue is not full and not empty
 
-      #if (NVM_JOB_PRIORITIZATION == STD_ON)
-          uint16 i;   //internal variable to store the loop index
-          //intermediate variable to store ID of the compared job in each cycle
-          NvM_BlockIdType Compared_Job_Id;
 
-         /*insert the new job based on priority.
-          *loop over queue elements starting from tail until you reach head,
-          *or reach a higher priority job*/
-        for(i = Stand_Queue_Indeces.Tail ; i != Stand_Queue_Indeces.Head; i--){
-          // if i = 0
-          if(i == 0){
+      #if (NVM_JOB_PRIORITIZATION == STD_ON)
+
+        uint16 counter;   //internal variable to store the loop index
+        //intermediate variable to store ID of the compared job in each cycle
+        NvM_BlockIdType Compared_Job_Id;
+
+        /*insert the new job based on priority.
+        *loop over queue elements starting from tail until you reach head,
+        *or reach a higher priority job
+        */
+        for(counter = Stand_Queue_Indeces.Tail ; counter != Stand_Queue_Indeces.Head; counter--){
+          // if counter = 0
+          if(counter == 0){
             Compared_Job_Id = Standard_Job_Queue[NVM_SIZE_STANDARD_JOB_QUEUE -1].Block_Id;
             if(NvMBlockDescriptor[Job.Block_Id].NvMBlockJobPriority < NvMBlockDescriptor[Compared_Job_Id].NvMBlockJobPriority){
-              Standard_Job_Queue[i] = Standard_Job_Queue[NVM_SIZE_STANDARD_JOB_QUEUE -1];
-              i = NVM_SIZE_STANDARD_JOB_QUEUE;
+              Standard_Job_Queue[counter] = Standard_Job_Queue[NVM_SIZE_STANDARD_JOB_QUEUE -1];
+              counter = NVM_SIZE_STANDARD_JOB_QUEUE;
             }
             else{
               break;
             }
           }
-          // if i != 0
+          // if counter != 0
           else{
-            Compared_Job_Id = Standard_Job_Queue[i-1].Block_Id;
+            Compared_Job_Id = Standard_Job_Queue[counter-1].Block_Id;
             if(NvMBlockDescriptor[Job.Block_Id].NvMBlockJobPriority < NvMBlockDescriptor[Compared_Job_Id].NvMBlockJobPriority){
-              Standard_Job_Queue[i] = Standard_Job_Queue[i-1];
+              Standard_Job_Queue[counter] = Standard_Job_Queue[counter-1];
             }
             else{
               break;
             }
           }
         }
-        Standard_Job_Queue[i] = Job;
+        Standard_Job_Queue[counter] = Job;
+
+    /*
+     * [SWS_NvM_00379]
+     * If priority based job processing is disabled via configuration,
+     * the NvM module shall not support immediate write jobs. In this case,
+     * the NvM module processes all jobs in FCFS order
+     */
       #else
         Standard_Job_Queue[Stand_Queue_Indeces.Tail] = Job;
       #endif
@@ -238,7 +219,14 @@ static Std_ReturnType Job_Enqueue(Job_Parameters Job)
   return E_OK;
 }
 
-/***************************************************************************/
+/****************************************************************************************/
+/*    Function Name           : Job_Dequeue                                             */
+/*    Function Description    : take a job out of the queue to be executed              */
+/*    Parameter in            : none                                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : Job                                                     */
+/*    Return value            : Std_ReturnType                                          */
+/****************************************************************************************/
 
 static Std_ReturnType Job_Dequeue(Job_Parameters* Job)
 {
@@ -265,9 +253,9 @@ static Std_ReturnType Job_Dequeue(Job_Parameters* Job)
        Immediate_Queue_Empty = TRUE;
      }
      return E_OK;
-
   }
  #endif
+
   //Immediate queue is empty and standard queue is empty, so return error
   if(Standard_Queue_Empty == TRUE){
     return E_NOT_OK;
@@ -298,5 +286,29 @@ static Std_ReturnType Job_Dequeue(Job_Parameters* Job)
   }
 
 }
-/***************************************************************************/
+
+/*****************************************************************************************/
+/*                              Global Functions Implementation                          */
+/*****************************************************************************************/
+
+/****************************************************************************************/
+/*    Function Name           : NvM_WriteBlock                                          */
+/*    Function Description    : Service to copy the data of the RAM block to its        */
+/*                              corresponding NV block.                                 */
+/*    Parameter in            : BlockId, NvM_SrcPtr                                     */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : Std_ReturnType                                          */
+/*    Requirement              : SWS_NvM_00455                                          */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
+Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr )
+{
+    if(AdministrativeBlock[BlockId].WriteProtect == TRUE){
+        /*Report error to the Dem Module*/
+    }
+
+
+}
+
 

@@ -26,6 +26,7 @@
 #define NVM_INIT_API_ID                             (0x00U)
 #define NVM_SET_DATAINDEX_API_ID                    (0x01U)
 #define NVM_GET_DATAINDEX_API_ID                    (0x02U)
+#define NVM_GET_ERROR_STATUS_API_ID                 (0x04U)
 #define NVM_SET_RAMBLOCKSTATUS_API_ID               (0x05U)
 #define NVM_READBLOCK_API_ID                        (0x06U)
 #define NVM_WRITEBLOCK_API_ID                       (0x07U)
@@ -57,6 +58,12 @@
  * queue is full. (SRS_Mem_00038) */
 #define NVM_E_QUEUE_FULL                            (0xA0U)
 
+
+/*****************************************************************************************/
+/*                              Global Functions Prototypes                              */
+/*****************************************************************************************/
+
+Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr );
 
 
 #endif /* BSW_STATIC_SERVICE_NVM_INC_NVM_H_ */
