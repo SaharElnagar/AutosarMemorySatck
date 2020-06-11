@@ -63,7 +63,9 @@
 /*                              Global Functions Prototypes                              */
 /*****************************************************************************************/
 
-Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr );
+Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr ) ;
+Std_ReturnType NvM_CancelJobs( NvM_BlockIdType BlockId ) ;
+void NvM_MainFunction( void ) ;
 
 
 #endif /* BSW_STATIC_SERVICE_NVM_INC_NVM_H_ */

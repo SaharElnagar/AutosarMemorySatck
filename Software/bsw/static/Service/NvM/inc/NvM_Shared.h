@@ -12,11 +12,11 @@
 /*                                   Local types Definition                              */
 /*****************************************************************************************/
 
-/*Jobs type*/
-typedef uint8 JobRequestType ;
-
 /*Module state type*/
-typedef uint8 ModuleStateType;
+typedef uint8 ModuleStateType ;
+
+/*Permanent RAM Status type*/
+typedef uint8 PRamStatusType ;
 
 /* [SWS_NvM_00134]
  * Administrative block Type
@@ -33,37 +33,32 @@ typedef struct
 {
     uint8 DataSetIndex ;
     NvM_RequestResultType BlockStatus ;
-    uint8 PRAMStatus ;
-    _Bool WriteProtect ;
-}AdministrativeBlockType;
+    PRamStatusType PRAMStatus ;
+    boolean WriteProtect ;
+
+}AdministrativeBlockType ;
 
 /* struct to hold the parameters for the job request*/
-typedef struct{
-    JobRequestType Job_Type;
-   NvM_BlockIdType Block_Id;
-   void* RAM_Ptr;
-}Job_Parameters;
+typedef struct
+{
+   uint8 ServiceId ;
+   NvM_BlockIdType Block_Id ;
+   void* RAM_Ptr ;
+
+}Job_Parameters ;
 
 /*struct to hold the indices which point to the queue
  *Used for queue implementation
  */
 typedef struct{
-  uint16 Head;
-  uint16 Tail;
-}Queue_Indices_Struct;
+  uint16 Head ;
+  uint16 Tail ;
+}Queue_Indices_Struct ;
 
 /*****************************************************************************************/
 /*                               Local Macros Definition                                 */
 /*****************************************************************************************/
 
-/*Request jobs possible values*/
-#define NO_JOB                      ((JobRequestType)0U)
-#define READ_BLOCK                  ((JobRequestType)1U)
-#define WRITE_BLOCK                 ((JobRequestType)2U)
-#define RESTORE_BLOCK               ((JobRequestType)3U)
-#define INVALIDATE_BLOCK            ((JobRequestType)4U)
-#define READ_ALL                    ((JobRequestType)5U)
-#define WRITE_ALL                   ((JobRequestType)6U)
 
 /*Empty Queue size*/
 #define EMPTY_QUEUE                 (0U)
@@ -71,6 +66,10 @@ typedef struct{
 /*Module States*/
 #define MODULE_UNINITIALIZED        ((ModuleStateType)0U)
 #define INIT_DONE                   ((ModuleStateType)1U)
+
+/*Permanent Ram Status*/
+#define INVALID                     ((PRamStatusType)0U)
+#define VALID                       ((PRamStatusType)1U)
 
 
 /*****************************************************************************************/
@@ -83,18 +82,17 @@ typedef struct{
  */
 static AdministrativeBlockType AdministrativeBlock[NUMBER_OF_NVM_BLOCKS];
 
-/*Variable to save module state*/
-static ModuleStateType ModuleState = MODULE_UNINITIALIZED ;
 
 
 /*****************************************************************************************/
 /*                                   Local Functions Prototypes                          */
 /*****************************************************************************************/
 
- Std_ReturnType Job_Enqueue(Job_Parameters Job);
- Std_ReturnType Job_Dequeue(Job_Parameters* Job);
- void Init_Queue(void);
- Std_ReturnType Search_Queue(NvM_BlockIdType BlockId);
+ Std_ReturnType Job_Enqueue(Job_Parameters Job) ;
+ Std_ReturnType Job_Dequeue(Job_Parameters* Job) ;
+ void Init_Queue(void) ;
+ Std_ReturnType Search_Queue(NvM_BlockIdType BlockId) ;
+ void NvM_Main_Write(void) ;
 
 /*****************************************************************************************/
 /*                                   external variables                                  */
@@ -131,17 +129,22 @@ static Queue_Indices_Struct Stand_Queue_Indeces = {0, 0};
   static Queue_Indices_Struct Immed_Queue_Indeces = {0, 0};
 #endif
 
+/*Variable to save module state*/
+static ModuleStateType ModuleState = MODULE_UNINITIALIZED ;
+
+/*Variable to hold the current job being processed by the main function*/
+Job_Parameters Current_Job ;
+
 /*****************************************************************************************/
 /*                                   Queue Flags                                         */
 /*****************************************************************************************/
-static _Bool Standard_Queue_Empty = TRUE;
-static _Bool Standard_Queue_FULL = FALSE;
+static boolean Standard_Queue_Empty = TRUE;
+static boolean Standard_Queue_FULL = FALSE;
 
 #if (NVM_JOB_PRIORITIZATION == STD_ON)
-  static _Bool Immediate_Queue_Empty = TRUE;
-  static _Bool Immediate_Queue_FULL = FALSE;
+  static boolean Immediate_Queue_Empty = TRUE;
+  static boolean Immediate_Queue_FULL = FALSE;
 #endif
-
 
 
 #endif
