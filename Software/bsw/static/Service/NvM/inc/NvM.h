@@ -65,6 +65,7 @@
 
 Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr ) ;
 Std_ReturnType NvM_CancelJobs( NvM_BlockIdType BlockId ) ;
+Std_ReturnType NvM_EraseNvBlock( NvM_BlockIdType BlockId ) ;
 void NvM_MainFunction( void ) ;
 
 

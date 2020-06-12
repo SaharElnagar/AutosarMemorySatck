@@ -34,7 +34,7 @@ typedef struct
     uint8 DataSetIndex ;
     NvM_RequestResultType BlockStatus ;
     PRamStatusType PRAMStatus ;
-    boolean WriteProtect ;
+    uint32 PrevCRCVal ;
 
 }AdministrativeBlockType ;
 
@@ -59,6 +59,8 @@ typedef struct{
 /*                               Local Macros Definition                                 */
 /*****************************************************************************************/
 
+/*Size of the largest block in our module*/
+#define LARGEST_BLOCK_SIZE          (100U)
 
 /*Empty Queue size*/
 #define EMPTY_QUEUE                 (0U)
@@ -133,7 +135,10 @@ static Queue_Indices_Struct Stand_Queue_Indeces = {0, 0};
 static ModuleStateType ModuleState = MODULE_UNINITIALIZED ;
 
 /*Variable to hold the current job being processed by the main function*/
-Job_Parameters Current_Job ;
+static Job_Parameters Current_Job ;
+
+/*Temporary variable to store the NV data combined with CRC value */
+static uint8 TempBuffer[LARGEST_BLOCK_SIZE] ;
 
 /*****************************************************************************************/
 /*                                   Queue Flags                                         */

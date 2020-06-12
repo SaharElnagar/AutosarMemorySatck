@@ -367,11 +367,11 @@ Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr )
      * NV block in the administrative part of the corresponding RAM block.
      * In case of failure an NVM_E_WRITE_PROTECTED / (during production) error shall be reported.
      */
-    else if(AdministrativeBlock[BlockId].WriteProtect == TRUE){
-            /*Report error to the Dem Module*/
-            /* [SWS_NvM_00217] */
-            Return_Val = E_NOT_OK ;
-    }
+//    else if(AdministrativeBlock[BlockId].WriteProtect == TRUE){
+//            /*Report error to the Dem Module*/
+//            /* [SWS_NvM_00217] */
+//            Return_Val = E_NOT_OK ;
+//    }
 
     /* [SWS_NvM_00208]
      * The function NvM_WriteBlock shall take over the given parameters,
@@ -439,15 +439,16 @@ Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr )
 
 void NvM_Main_Write(void)
 {
+    static uint32 CRC_Val = 0 ;
     static uint8 Retry_Counter = 0;
     static uint8 redundant_block_Num = 0;
+    uint16 counter = 0 ;
 
     /* Variable to hold the current state of the function
      * We have 3 states:
      *** 0 -> Initial state : Send the Write request to the Memory interface layer and wait until the result is not pending.
      *** 1 -> the write is done and result is OK (Memory interface returns MEMIF_JOB_OK)
      *** 2 -> the write can't be done (Memory interface returns MEMIF_JOB_FAILED or the write request itself returns E_NOT_OK)
-     *** 3 -> the write job is canceled (Memory interface returns MEMIF_JOB_CANCELED)
      */
     static uint8 Current_State = 0;
 
@@ -460,7 +461,73 @@ void NvM_Main_Write(void)
       */
      case 0 :
 
+         /* [SWS_NvM_00212]
+          * The job of the function NvM_WriteBlock shall request a CRC recalculation
+          * before the RAM block will be copied to NV memory if the NV block is configured with CRC
+          */
+         if(NvMBlockDescriptor[Current_Job.Block_Id].NvMBlockUseCrc == TRUE){
+
+             /* [SWS_NvM_00852]
+              * The job of the function NvM_WriteBlock shall skip writing and consider the job as
+              * successfully finished if the NvMBlockUseCRCCompMechanism attribute of the NVRAM Block
+              * is set to true and the RAM block CRC calculated by the write job is equal to the CRC
+              * calculated during the last successful read or write job.
+              * This mechanism shall not be applied to blocks for which a loss of redundancy has been detected.
+              */
+
+             /* if the RAM block is not permanent , calculate CRC immediately */
+
+             if(NvMBlockDescriptor[Current_Job.Block_Id].NvMRamBlockDataAddress != Current_Job.RAM_Ptr){
+
+                /* CRC_Val = Calculate_CRC() ; */
+                if(NvMBlockDescriptor[Current_Job.Block_Id].NvMBlockUseCRCCompMechanism == TRUE){
+
+                   if(CRC_Val == AdministrativeBlock[Current_Job.Block_Id].PrevCRCVal){
+
+                        redundant_block_Num = 1 ;
+                        Current_State = 1 ;
+                        break ;
+
+                    }
+                }
+
+             }
+
+             /* ECUC_NvM_00119 */
+             /*else if the ram block is permanent and NvMCalcRamBlockCrc is true , calculate CRC */
+             else if(NvMBlockDescriptor[Current_Job.Block_Id].NvMCalcRamBlockCrc == TRUE){
+
+                 /* CRC_Val = Calculate_CRC() ; */
+                 if(NvMBlockDescriptor[Current_Job.Block_Id].NvMBlockUseCRCCompMechanism == TRUE){
+
+                    if(CRC_Val == AdministrativeBlock[Current_Job.Block_Id].PrevCRCVal){
+
+                       redundant_block_Num = 1 ;
+                       Current_State = 1 ;
+                       break ;
+
+                    }
+                 }
+             }
+         }
+
          if(MemIf_GetStatus(NvMBlockDescriptor[Current_Job.Block_Id].NvMNvramDeviceId) == MEMIF_IDLE){
+
+            if(CRC_Val != 0){
+
+               for (counter = 0 ; counter < NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength ; counter ++){
+
+                   TempBuffer[counter] = *((uint8 *)Current_Job.RAM_Ptr) ;
+                   (uint8 *)(Current_Job.RAM_Ptr) ++;
+
+               }
+
+               TempBuffer[NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength] = (CRC_Val & 0xFF000000) ;
+               TempBuffer[NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength + 1] = (CRC_Val & 0x00FF0000) ;
+               TempBuffer[NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength + 1] = (CRC_Val & 0x0000FF00) ;
+               TempBuffer[NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength + 1] = (CRC_Val & 0x000000FF) ;
+
+            }
 
             /* [SWS_NvM_00303]
              * The job of the function NvM_WriteBlock shall assume a referenced permanent RAM block or the RAM mirror
@@ -469,25 +536,53 @@ void NvM_Main_Write(void)
              * before copying the RAM block contents to NV memory or after calling explicit synchronization callback
              */
             if((NvMBlockDescriptor[Current_Job.Block_Id].NvMRamBlockDataAddress == Current_Job.RAM_Ptr) && (AdministrativeBlock[Current_Job.Block_Id].PRAMStatus != VALID)){
+
                 AdministrativeBlock[Current_Job.Block_Id].PRAMStatus = VALID ;
+
             }
 
             /*Calculate FEE/EA Block Number to send to the MemIf Module*/
             /*Native Block*/
             if(NvMBlockDescriptor[Current_Job.Block_Id].NvMBlockManagement == NVM_BLOCK_NATIVE){
+
                Fee_Ea_Block_Num = NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockBaseNumber << NVM_DATASET_SELECTION_BITS ;
-            }
-            /*DataSet Block*/
-            else if(NvMBlockDescriptor[Current_Job.Block_Id].NvMBlockManagement == NVM_BLOCK_DATASET){
-                    Fee_Ea_Block_Num = (NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockBaseNumber << NVM_DATASET_SELECTION_BITS) + AdministrativeBlock[Current_Job.Block_Id].DataSetIndex ;
-            }
-            /*Redundant Block*/
-            else if(NvMBlockDescriptor[Current_Job.Block_Id].NvMBlockManagement == NVM_BLOCK_REDUNDANT){
-                    Fee_Ea_Block_Num = (NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockBaseNumber << NVM_DATASET_SELECTION_BITS) + redundant_block_Num ;
+
             }
 
+            /* [SWS_NvM_00338]
+             * The job of the function NvM_WriteBlock shall copy the RAM block to the corresponding NV block
+             * which is selected via the data index in the administrative block
+             * if the NVRAM block management type of the given NVRAM block is NVM_BLOCK_DATASET.
+             */
+            /*DataSet Block*/
+            else if(NvMBlockDescriptor[Current_Job.Block_Id].NvMBlockManagement == NVM_BLOCK_DATASET){
+
+                Fee_Ea_Block_Num = (NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockBaseNumber << NVM_DATASET_SELECTION_BITS) + AdministrativeBlock[Current_Job.Block_Id].DataSetIndex ;
+
+            }
+            /* [SWS_NvM_00760] The job of the function NvM_WriteBlock shall copy the data content of the RAM block
+             * to both corresponding NV blocks if the NVRAM block management type of the processed NVRAM block
+             * is NVM_BLOCK_REDUNDANT.
+             */
+            /*Redundant Block*/
+            else if(NvMBlockDescriptor[Current_Job.Block_Id].NvMBlockManagement == NVM_BLOCK_REDUNDANT){
+                Fee_Ea_Block_Num = (NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockBaseNumber << NVM_DATASET_SELECTION_BITS) + redundant_block_Num ;
+            }
+
+            Std_ReturnType InitWrite ;
+
             /*Call MemIf_Write function*/
-            Std_ReturnType InitWrite = MemIf_Write(NvMBlockDescriptor[Current_Job.Block_Id].NvMNvramDeviceId, Fee_Ea_Block_Num, Current_Job.RAM_Ptr) ;
+            if(CRC_Val != 0){
+
+                InitWrite = MemIf_Write(NvMBlockDescriptor[Current_Job.Block_Id].NvMNvramDeviceId, Fee_Ea_Block_Num, TempBuffer) ;
+
+            }
+            else{
+
+                InitWrite = MemIf_Write(NvMBlockDescriptor[Current_Job.Block_Id].NvMNvramDeviceId, Fee_Ea_Block_Num, Current_Job.RAM_Ptr) ;
+
+            }
+
 
             AdministrativeBlock[Current_Job.Block_Id].BlockStatus = NVM_REQ_PENDING ;
 
@@ -505,15 +600,14 @@ void NvM_Main_Write(void)
          else if (MemIf_GetJobResult(NvMBlockDescriptor[Current_Job.Block_Id].NvMNvramDeviceId) == MEMIF_JOB_FAILED){
                   Current_State = 2 ;
          }
-         /* Case 3 : If the job is canceled */
-         else if (MemIf_GetJobResult(NvMBlockDescriptor[Current_Job.Block_Id].NvMNvramDeviceId) == MEMIF_JOB_CANCELED){
-                  Current_State = 3 ;
-         }
+
+         break ;
 
      /*Case 1 :
       * If the job is done and result is OK
       */
      case 1 :
+
          Retry_Counter = 0 ;
          Current_State = 0 ;
 
@@ -522,28 +616,46 @@ void NvM_Main_Write(void)
           * if the passed BlockId references a NVRAM block of type NVM_BLOCK_REDUNDANT
           * and at least one of the NV blocks has been written successfully.
           */
+
          if(NvMBlockDescriptor[Current_Job.Block_Id].NvMBlockManagement == NVM_BLOCK_REDUNDANT && redundant_block_Num == 0){
+
             redundant_block_Num = 1 ;
             AdministrativeBlock[Current_Job.Block_Id].BlockStatus = NVM_REQ_OK ;
+
          }
-         /* [SWS_NvM_00760] The job of the function NvM_WriteBlock shall copy the data content of the RAM block
-          * to both corresponding NV blocks if the NVRAM block management type of the processed NVRAM block
-          * is NVM_BLOCK_REDUNDANT.
-          */
+
          else{
+
+             CRC_Val = 0 ;
              redundant_block_Num = 0;
              AdministrativeBlock[Current_Job.Block_Id].BlockStatus = NVM_REQ_OK ;
              AdministrativeBlock[Current_Job.Block_Id].PRAMStatus = INVALID ;
 
-             Current_Job.ServiceId = NVM_INIT_API_ID ;
-             Current_Job.Block_Id = 0 ;
-             Current_Job.RAM_Ptr = NULL ;
+             if(CRC_Val != 0){
+                 AdministrativeBlock[Current_Job.Block_Id].PrevCRCVal = CRC_Val ;
+                 CRC_Val = 0 ;
+             }
+
+             Job_Dequeue( &Current_Job ) ;
+
+             if(Standard_Queue_Empty != TRUE){
+                 Current_Job = Standard_Job_Queue[Stand_Queue_Indeces.Head] ;
+             }
+             else {
+                 Current_Job.ServiceId = NVM_INIT_API_ID ;
+                 Current_Job.Block_Id = 0 ;
+                 Current_Job.RAM_Ptr = NULL ;
+             }
+
          }
+
+         break ;
 
      /* Case 2 :
       * If the job failed
       */
      case 2 :
+
          /* [SWS_NvM_00213]
           * The job of the function NvM_WriteBlock shall check the number of write retries using a write retry counter
           * to avoid infinite loops. Each negative result reported by the memory interface shall be followed by
@@ -560,36 +672,33 @@ void NvM_Main_Write(void)
 
              /*report NVM_E_REQ_FAILED to the DEM.*/
 
+             CRC_Val = 0 ;
              Retry_Counter = 0 ;
              redundant_block_Num = 0 ;
 
-             Current_Job.ServiceId = NVM_INIT_API_ID ;
-             Current_Job.Block_Id = 0 ;
-             Current_Job.RAM_Ptr = NULL ;
+             if(CRC_Val != 0){
+                 AdministrativeBlock[Current_Job.Block_Id].PrevCRCVal = CRC_Val ;
+                 CRC_Val = 0 ;
+             }
+
+             Job_Dequeue( &Current_Job ) ;
+
+             if(Standard_Queue_Empty != TRUE){
+             Current_Job = Standard_Job_Queue[Stand_Queue_Indeces.Head] ;
+             }
+             else {
+
+                 Current_Job.ServiceId = NVM_INIT_API_ID ;
+                 Current_Job.Block_Id = 0 ;
+                 Current_Job.RAM_Ptr = NULL ;
+             }
+
          }
 
-     /* Case 3 :
-      * If the job is canceled
-      */
-     case 3 :
-         Retry_Counter = 0 ;
-         Current_State = 0 ;
-         redundant_block_Num = 0 ;
-
-         AdministrativeBlock[Current_Job.Block_Id].BlockStatus = NVM_REQ_CANCELED ;
-
-         /*Re-enqueue the job to be continued later*/
-         Job_Enqueue(Current_Job) ;
-
-         Current_Job.ServiceId = NVM_INIT_API_ID ;
-         Current_Job.Block_Id = 0 ;
-         Current_Job.RAM_Ptr = NULL ;
+         break ;
     }
 
 }
-
-
-
 
 
 
