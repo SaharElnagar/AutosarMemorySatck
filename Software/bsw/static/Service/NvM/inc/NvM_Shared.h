@@ -7,6 +7,8 @@
 
 #include "NvM.h"
 #include "Det.h"
+#include "MemIf_Types.h"
+#include "MemIf.h"
 
 /*****************************************************************************************/
 /*                                   Local types Definition                              */
@@ -55,9 +57,31 @@ typedef struct{
   uint16 Tail ;
 }Queue_Indices_Struct ;
 
+/*Multi  block request Information */
+typedef struct
+{
+    NvM_BlockIdType ResultStatus ;
+    uint8 request;
+    uint8 Internal_state ;
+}MultiBlockRequestType;
+
+#if(NVM_POLLING_MODE == STD_OF)
+/*Struct to save end job status from underlying layer Successful or failed*/
+typedef struct
+{
+    uint8 EndJobSuccess : 1;
+    uint8 EndJobFailed  : 1;
+}EndJobStatusType;
+#endif
+
 /*****************************************************************************************/
 /*                               Local Macros Definition                                 */
 /*****************************************************************************************/
+
+/*Permenant Ram block status*/
+#define INVALID_UNCHANGED           ((PRamStatusType)0U)
+#define VALID_UNCHANGED             ((PRamStatusType)1U)
+#define VALID_CHANGED               ((PRamStatusType)2U)
 
 
 /*Empty Queue size*/
@@ -71,6 +95,16 @@ typedef struct{
 #define INVALID                     ((PRamStatusType)0U)
 #define VALID                       ((PRamStatusType)1U)
 
+/*Block Type of the non volatile memory*/
+#define NV_BLOCK                    (0U)
+#define ROM_BLOCK                   (1U)
+
+/*Read Block states */
+#define GET_MEMIF_BLOCK_ID          (0U)
+#define READ_NV_BLOCK               (1U)
+#define READ_ROM_BLOCK              (2U)
+#define CHECK_CRC                   (3U)
+#define END_JOB                     (4U)
 
 /*****************************************************************************************/
 /*                                   Local variables Definition                          */
@@ -82,7 +116,7 @@ typedef struct{
  */
 static AdministrativeBlockType AdministrativeBlock[NUMBER_OF_NVM_BLOCKS];
 
-
+static MultiBlockRequestType MultiBlcokRequest ;
 
 /*****************************************************************************************/
 /*                                   Local Functions Prototypes                          */
