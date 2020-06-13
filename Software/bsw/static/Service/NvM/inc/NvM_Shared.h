@@ -78,6 +78,11 @@ typedef struct
 /*                               Local Macros Definition                                 */
 /*****************************************************************************************/
 
+/*Permenant Ram block status*/
+#define INVALID_UNCHANGED           ((PRamStatusType)0U)
+#define VALID_UNCHANGED             ((PRamStatusType)1U)
+#define VALID_CHANGED               ((PRamStatusType)2U)
+
 
 /*Size of the largest block in our module*/
 #define LARGEST_BLOCK_SIZE          (100U)

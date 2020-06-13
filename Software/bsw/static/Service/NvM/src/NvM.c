@@ -451,7 +451,7 @@ Std_ReturnType NvM_ReadBlock( NvM_BlockIdType BlockId, void* NvM_DstPtr )
         rtn_val = E_NOT_OK;
     }
     /*Return E_NOT_OK if the required index is in ROM and ROM address not configured*/
-    else if(dataIndex >= NvNumberOfBlocks && NvMBlockDescriptor[BlockId].NvMRomBlockDataAddress == NULL_PTR )
+    else if(dataIndex>= NvNumberOfBlocks && NvMBlockDescriptor[BlockId].NvMRomBlockDataAddress == NULL_PTR )
     {
         rtn_val = E_NOT_OK ;
     }
