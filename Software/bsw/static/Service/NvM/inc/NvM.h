@@ -27,13 +27,14 @@
 #define NVM_SET_DATAINDEX_API_ID                    (0x01U)
 #define NVM_GET_DATAINDEX_API_ID                    (0x02U)
 #define NVM_GET_ERROR_STATUS_API_ID                 (0x04U)
-#define NVM_SET_RAMBLOCKSTATUS_API_ID               (0x05U)
+#define NVM_SET_RAMBLOCK_STATUS_API_ID              (0x05U)
 #define NVM_READBLOCK_API_ID                        (0x06U)
 #define NVM_WRITEBLOCK_API_ID                       (0x07U)
 #define NVM_RESTORE_BLOCKDEFAULTS_API_ID            (0x08U)
 #define NVM_INVALIDATEBLOCK_API_ID                  (0x0BU)
 #define NVM_READ_ALL_API_ID                         (0x0CU)
 #define NVM_WRITE_ALL_API_ID                        (0x0DU)
+
 
 /*****************************************************************************************/
 /*                                  NvM Development errors                               */
@@ -65,8 +66,8 @@
 
 Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr ) ;
 Std_ReturnType NvM_CancelJobs( NvM_BlockIdType BlockId ) ;
-Std_ReturnType NvM_EraseNvBlock( NvM_BlockIdType BlockId ) ;
+Std_ReturnType NvM_InvalidateNvBlock( NvM_BlockIdType BlockId ) ;
+Std_ReturnType NvM_WritePRAMBlock( NvM_BlockIdType BlockId ) ;
 void NvM_MainFunction( void ) ;
-
 
 #endif /* BSW_STATIC_SERVICE_NVM_INC_NVM_H_ */

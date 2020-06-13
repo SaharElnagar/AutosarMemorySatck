@@ -12,10 +12,12 @@
 #include "Platform_Types.h"
 
 typedef uint8 MemIf_JobResultType;
-#define     MEMIF_JOB_OK            (0U)
-#define     MEMIF_JOB_FAILED        (1U)
-#define     MEMIF_JOB_PENDING       (2U)
-#define     MEMIF_JOB_CANCELED      (3U)
+#define     MEMIF_JOB_OK                (0U)
+#define     MEMIF_JOB_FAILED            (1U)
+#define     MEMIF_JOB_PENDING           (2U)
+#define     MEMIF_JOB_CANCELED          (3U)
+#define     MEMIF_BLOCK_INCONSISTENT    (4U)
+#define     MEMIF_BLOCK_INVALID         (5U)
 
 
 typedef uint8 MemIf_StatusType;

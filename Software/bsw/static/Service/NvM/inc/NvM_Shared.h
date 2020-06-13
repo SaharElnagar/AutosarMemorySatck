@@ -7,6 +7,8 @@
 
 #include "NvM.h"
 #include "Det.h"
+#include "MemIf_Types.h"
+#include "MemIf.h"
 
 /*****************************************************************************************/
 /*                                   Local types Definition                              */
@@ -55,12 +57,36 @@ typedef struct{
   uint16 Tail ;
 }Queue_Indices_Struct ;
 
+/*Multi  block request Information */
+typedef struct
+{
+    NvM_RequestResultType ResultStatus ;
+    uint8 request ;
+    uint8 Internal_state ;
+}MultiBlockRequestType;
+
+#if(NVM_POLLING_MODE == STD_OF)
+/*Struct to save end job status from underlying layer Successful or failed*/
+typedef struct
+{
+    uint8 EndJobSuccess : 1;
+    uint8 EndJobFailed  : 1;
+}EndJobStatusType;
+#endif
+
 /*****************************************************************************************/
 /*                               Local Macros Definition                                 */
 /*****************************************************************************************/
 
+
 /*Size of the largest block in our module*/
 #define LARGEST_BLOCK_SIZE          (100U)
+
+/*Permenant Ram block status*/
+#define INVALID_UNCHANGED           ((PRamStatusType)0U)
+#define VALID_UNCHANGED             ((PRamStatusType)1U)
+#define VALID_CHANGED               ((PRamStatusType)2U)
+
 
 /*Empty Queue size*/
 #define EMPTY_QUEUE                 (0U)
@@ -69,10 +95,30 @@ typedef struct{
 #define MODULE_UNINITIALIZED        ((ModuleStateType)0U)
 #define INIT_DONE                   ((ModuleStateType)1U)
 
-/*Permanent Ram Status*/
-#define INVALID                     ((PRamStatusType)0U)
-#define VALID                       ((PRamStatusType)1U)
 
+/*Block Type of the non volatile memory*/
+#define NV_BLOCK                    (0U)
+#define ROM_BLOCK                   (1U)
+
+/*Read Block states */
+#define GET_MEMIF_BLOCK_ID          (0U)
+#define READ_NV_BLOCK               (1U)
+#define READ_ROM_BLOCK              (2U)
+#define CHECK_CRC                   (3U)
+#define END_JOB                     (4U)
+
+/*Write Block states*/
+#define CALC_CRC                    (0U)
+#define WRITE_NV_BLOCK              (1U)
+#define WRITE_OK                    (2U)
+#define WRITE_FAILED                (3U)
+#define WRITE_END                   (4U)
+
+/*Invalidate Block states*/
+#define INVALIDATE_NV_BLOCK         (0U)
+#define INVALIDATE_OK               (1U)
+#define INVALIDATE_FAILED           (2U)
+#define INVALIDATE_END              (3U)
 
 /*****************************************************************************************/
 /*                                   Local variables Definition                          */
@@ -84,7 +130,7 @@ typedef struct{
  */
 static AdministrativeBlockType AdministrativeBlock[NUMBER_OF_NVM_BLOCKS];
 
-
+static MultiBlockRequestType MultiBlcokRequest ;
 
 /*****************************************************************************************/
 /*                                   Local Functions Prototypes                          */
@@ -95,6 +141,7 @@ static AdministrativeBlockType AdministrativeBlock[NUMBER_OF_NVM_BLOCKS];
  void Init_Queue(void) ;
  Std_ReturnType Search_Queue(NvM_BlockIdType BlockId) ;
  void NvM_Main_Write(void) ;
+ static void NvM_MainFunction_InvalidateBlock(void) ;
 
 /*****************************************************************************************/
 /*                                   external variables                                  */

@@ -88,7 +88,7 @@
  * Preprocessor switch to enable/disable the polling mode in the NVRAM Manager and at the same time disable/enable the callback functions useable by lower layers
  * true: Polling mode enabled, callback function usage disabled.
  * false: Polling mode disabled, callback function usage enabled.*/
-#define NVM_POLLING_MODE
+#define NVM_POLLING_MODE                STD_OFF
 
 /* ECUC_NvM_00518
  * Defines the number of retries to let the application copy data to or from the
