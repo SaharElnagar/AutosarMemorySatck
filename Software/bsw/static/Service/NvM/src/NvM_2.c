@@ -34,16 +34,10 @@
 /*    Return value            : none                                                    */
 /****************************************************************************************/
 
-void Init_Queue(void)
+void Init_Queues(void)
 {
     /*counter to loop over queue elements*/
-    uint16 counter ;
-
-    Stand_Queue_Indeces.Head = 0 ;
-    Stand_Queue_Indeces.Tail = 0 ;
-
-    Standard_Queue_Empty = TRUE ;
-    Standard_Queue_FULL = FALSE ;
+    NvM_BlockIdType counter ;
 
     #if(NVM_JOB_PRIORITIZATION == STD_ON)
       Immed_Queue_Indeces.Head = 0 ;
@@ -53,18 +47,39 @@ void Init_Queue(void)
       Immediate_Queue_FULL = FALSE ;
     #endif
 
-    for(counter = 0; counter < NVM_SIZE_STANDARD_JOB_QUEUE; counter++){
-        Standard_Job_Queue[counter].ServiceId = NVM_INIT_API_ID ;
-        Standard_Job_Queue[counter].Block_Id = 0 ;
-        Standard_Job_Queue[counter].RAM_Ptr = NULL ;
-    }
+    Stand_Queue_Indeces.Head = 0 ;
+    Stand_Queue_Indeces.Tail = 0 ;
+
+    Standard_Queue_Empty = TRUE ;
+    Standard_Queue_FULL = FALSE ;
+
+    CRC_Queue_Indeces.Head = 0 ;
+    CRC_Queue_Indeces.Tail = 0 ;
+
+    CRC_Queue_Empty = TRUE ;
+    CRC_Queue_Full = FALSE ;
+
+
     #if(NVM_JOB_PRIORITIZATION == STD_ON)
-        for(counter = 0; counter < NVM_SIZE_IMMEDIATE_JOB_QUEUE; counter++){
+        for(counter = 0; counter < NVM_SIZE_IMMEDIATE_JOB_QUEUE; counter++)
+        {
             Immediate_Job_Queue[counter].ServiceId = NVM_INIT_API_ID ;
             Immediate_Job_Queue[counter].Block_Id = 0 ;
             Immediate_Job_Queue[counter].RAM_Ptr = NULL ;
         }
     #endif
+
+    for(counter = 0; counter < NVM_SIZE_STANDARD_JOB_QUEUE; counter++)
+    {
+        Standard_Job_Queue[counter].ServiceId = NVM_INIT_API_ID ;
+        Standard_Job_Queue[counter].Block_Id = 0 ;
+        Standard_Job_Queue[counter].RAM_Ptr = NULL ;
+    }
+
+    for(counter = 0; counter < NVM_SIZE_CRC_JOB_QUEUE ; counter++)
+    {
+        CRC_Job_Queue[counter] = 0 ;
+    }
 }
 
 /****************************************************************************************/
@@ -97,7 +112,7 @@ Std_ReturnType Search_Queue(NvM_BlockIdType BlockId)
     for(counter = 0; counter < NVM_SIZE_STANDARD_JOB_QUEUE; counter++){
        if(Standard_Job_Queue[counter].Block_Id == BlockId){
            Return_Val = E_OK ;
-           break;
+           break ;
        }
     }
 
@@ -230,20 +245,19 @@ Std_ReturnType Job_Enqueue(Job_Parameters Job)
 
 /****************************************************************************************/
 /*    Function Name           : Job_Dequeue                                             */
-/*    Function Description    : take a job out of the queue to be executed              */
+/*    Function Description    : Remove a single job from the queue                      */
 /*    Parameter in            : none                                                    */
 /*    Parameter inout         : none                                                    */
-/*    Parameter out           : Job                                                     */
+/*    Parameter out           : none                                                    */
 /*    Return value            : Std_ReturnType                                          */
 /****************************************************************************************/
 
-Std_ReturnType Job_Dequeue(Job_Parameters* Job)
+Std_ReturnType Job_Dequeue(void)
 {
  #if (NVM_JOB_PRIORITIZATION == STD_ON)
    //Immediate queue is not empty, so dequeue immediate job
    if(Immediate_Queue_Empty == FALSE){
 
-     *Job = Immediate_Job_Queue[Immed_Queue_Indeces.Head] ;
      Immediate_Job_Queue[Immed_Queue_Indeces.Head].Block_Id = 0 ;
      Immediate_Job_Queue[Immed_Queue_Indeces.Head].ServiceId = NVM_INIT_API_ID ;
      Immediate_Job_Queue[Immed_Queue_Indeces.Head].RAM_Ptr = NULL ;
@@ -272,7 +286,7 @@ Std_ReturnType Job_Dequeue(Job_Parameters* Job)
   //Immediate queue is empty and standard queue is not empty,
   //so dequeue standard jobs
   else{
-    *Job = Standard_Job_Queue[Stand_Queue_Indeces.Head] ;
+
     Standard_Job_Queue[Stand_Queue_Indeces.Head].Block_Id = 0 ;
     Standard_Job_Queue[Stand_Queue_Indeces.Head].ServiceId = NVM_INIT_API_ID ;
     Standard_Job_Queue[Stand_Queue_Indeces.Head].RAM_Ptr = NULL ;
@@ -294,6 +308,151 @@ Std_ReturnType Job_Dequeue(Job_Parameters* Job)
     return E_OK ;
   }
 
+}
+
+/****************************************************************************************/
+/*    Function Name           : Get_SingleJob                                           */
+/*    Function Description    : copy a single job parameters from queue to be executed  */
+/*    Parameter in            : none                                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : none                                                    */
+/****************************************************************************************/
+
+void Get_SingleJob(Job_Parameters* Job)
+{
+    #if(NVM_JOB_PRIORITIZATION == STD_ON)
+
+        if(Immediate_Queue_Empty == FALSE){
+
+            *Job = Immediate_Job_Queue[Immed_Queue_Indeces.Head] ;
+        }
+        else if(Standard_Queue_Empty == FALSE){
+
+            *Job = Standard_Job_Queue[Stand_Queue_Indeces.Head] ;
+        }
+        else {
+
+            Job->ServiceId = NVM_INIT_API_ID ;
+            Job->Block_Id = 0 ;
+            Job->RAM_Ptr = NULL ;
+        }
+        #else
+
+             if(Standard_Queue_Empty == FALSE){
+
+                *Job = Standard_Job_Queue[Stand_Queue_Indeces.Head] ;
+             }
+             else {
+
+                 Job->ServiceId = NVM_INIT_API_ID ;
+                 Job->Block_Id = 0 ;
+                 Job->RAM_Ptr = NULL ;
+             }
+
+         #endif
+
+}
+
+/****************************************************************************************/
+/*    Function Name           : CRCJob_Enqueue                                          */
+/*    Function Description    : Enqueue CRC Jobs to be processed inside main function.  */
+/*    Parameter in            : BlockId                                                 */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : Std_ReturnType                                          */
+/*    Requirement             :                                                         */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
+
+Std_ReturnType CRCJob_Enqueue(NvM_BlockIdType BlockId)
+{
+    Std_ReturnType Return_Val ;
+
+    if(CRC_Queue_Full == TRUE)
+    {
+        Return_Val = E_NOT_OK ;
+    }
+    else
+    {
+        /* insert the new CRC job*/
+        CRC_Job_Queue[CRC_Queue_Indeces.Tail] = BlockId ;
+        /* increment the tail pointer */
+        CRC_Queue_Indeces.Tail++ ;
+
+        /* When Tail reaches queue end */
+        if(CRC_Queue_Indeces.Tail == NVM_SIZE_CRC_JOB_QUEUE)
+        {
+            /* Return the tail pointer to the queue start again */
+            CRC_Queue_Indeces.Tail = 0 ;
+        }
+
+        /* if the queue was empty, mark it as not empty */
+        if(CRC_Queue_Empty == TRUE)
+        {
+            CRC_Queue_Empty = FALSE ;
+        }
+
+        /* When Tail reaches Head while Enqueuing, the queue is full */
+        if(CRC_Queue_Indeces.Tail == CRC_Queue_Indeces.Head)
+        {
+            CRC_Queue_Full = TRUE ;
+        }
+        Return_Val = E_OK ;
+    }
+
+    return Return_Val ;
+
+}
+
+/****************************************************************************************/
+/*    Function Name           : CRCJob_Dequeue                                          */
+/*    Function Description    : Dequeue CRC Jobs                                        */
+/*    Parameter in            : none                                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : Std_ReturnType                                          */
+/*    Requirement             :                                                         */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
+
+ Std_ReturnType CRCJob_Dequeue( void )
+{
+     Std_ReturnType Return_Val ;
+
+
+     if(CRC_Queue_Empty == TRUE)
+     {
+         Return_Val = E_NOT_OK ;
+     }
+     else
+     {
+         CRC_Job_Queue[CRC_Queue_Indeces.Head] = 0 ;
+         CRC_Queue_Indeces.Head++ ;
+
+         /* if the queue was full, mark it as not full */
+         if(CRC_Queue_Full == TRUE)
+         {
+             CRC_Queue_Full = FALSE ;
+         }
+
+         /* When Head reaches queue end */
+         if(CRC_Queue_Indeces.Head == NVM_SIZE_CRC_JOB_QUEUE)
+         {
+             /* Return the head pointer to the queue start again */
+             CRC_Queue_Indeces.Head = 0 ;
+         }
+
+         /* When Head reaches Tail while Dequeuing, the queue is empty */
+         if(CRC_Queue_Indeces.Head == CRC_Queue_Indeces.Tail)
+         {
+             CRC_Queue_Empty = TRUE ;
+         }
+
+         Return_Val = E_OK ;
+     }
+
+     return Return_Val ;
 }
 
 /*****************************************************************************************/
@@ -370,21 +529,6 @@ Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr )
     }
 
 
-    /* [SWS_NvM_00411]
-     * The function NvM_WriteBlock shall test the write protection attribute of the
-     * NV block in the administrative part of the corresponding RAM block.
-     * In case of failure an NVM_E_WRITE_PROTECTED / (during production) error shall be reported.
-     */
-//    else if(AdministrativeBlock[BlockId].WriteProtect == TRUE){
-//            /*Report error to the Dem Module*/
-//            /* [SWS_NvM_00217] */
-//            Return_Val = E_NOT_OK ;
-//    }
-
-    /* [SWS_NvM_00208]
-     * The function NvM_WriteBlock shall take over the given parameters,
-     * queue the write request in the job queue and return.
-     */
     else{
 
         Job_Parameters WriteJob ;
@@ -416,18 +560,6 @@ Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr )
         }
 
         Return_Val = Job_Enqueue(WriteJob) ;
-
-        /* [SWS_NvM_00300]
-         * The function NvM_WriteBlock shall cancel a pending job immediately in a destructive way
-         * if the passed BlockId references a NVRAM block configured to have immediate priority.
-         * The immediate job shall be the next active job to be processed
-         */
-        if(Return_Val == E_OK && NvMBlockDescriptor[BlockId].NvMBlockJobPriority == 0){
-           /*Cancel a pending job if it is not also an immediate job*/
-           if(NvMBlockDescriptor[Current_Job.Block_Id].NvMBlockJobPriority != 0){
-               NvM_CancelJobs(Current_Job.Block_Id) ;
-           }
-        }
     }
 
     return Return_Val;
@@ -445,7 +577,7 @@ Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr )
 /*    Notes                   :                                                         */
 /****************************************************************************************/
 
-static void NvM_MainFunction_WriteBlock(void)
+void NvM_MainFunction_WriteBlock(void)
 {
     static uint8 Current_State = CALC_CRC;
     static uint32 CRC_Val = 0 ;
@@ -674,45 +806,12 @@ static void NvM_MainFunction_WriteBlock(void)
          Retry_Counter = 0;
          redundant_block_Num = 0;
 
-         Job_Dequeue( &Current_Job ) ;
-
-         #if(NVM_JOB_PRIORITIZATION == STD_ON)
-
-             if(Immediate_Queue_Empty == FALSE){
-
-                 Current_Job = Immediate_Job_Queue[Immed_Queue_Indeces.Head] ;
-             }
-             else if(Standard_Queue_Empty == FALSE){
-
-                 Current_Job = Standard_Job_Queue[Stand_Queue_Indeces.Head] ;
-             }
-             else {
-
-                 Current_Job.ServiceId = NVM_INIT_API_ID ;
-                 Current_Job.Block_Id = 0 ;
-                 Current_Job.RAM_Ptr = NULL ;
-             }
-         #else
-
-             if(Standard_Queue_Empty == FALSE){
-
-                Current_Job = Standard_Job_Queue[Stand_Queue_Indeces.Head] ;
-             }
-             else {
-
-                Current_Job.ServiceId = NVM_INIT_API_ID ;
-                Current_Job.Block_Id = 0 ;
-                Current_Job.RAM_Ptr = NULL ;
-             }
-
-         #endif
+         Job_Dequeue() ;
+         Get_SingleJob( &Current_Job ) ;
 
          Current_State = CALC_CRC ;
-
          break ;
-
     }
-
 }
 
 /****************************************************************************************/
@@ -805,7 +904,7 @@ Std_ReturnType NvM_InvalidateNvBlock( NvM_BlockIdType BlockId )
 /*    Requirement             : SWS_NvM_00459                                           */
 /*    Notes                   :                                                         */
 /****************************************************************************************/
-static void NvM_MainFunction_InvalidateBlock(void)
+void NvM_MainFunction_InvalidateBlock(void)
 {
     static uint8 Current_State = INVALIDATE_NV_BLOCK;
     static uint8 redundant_block_Num = 0;
@@ -915,38 +1014,8 @@ static void NvM_MainFunction_InvalidateBlock(void)
       case INVALIDATE_END :
 
            redundant_block_Num = 0 ;
-           Job_Dequeue( &Current_Job ) ;
-
-           #if(NVM_JOB_PRIORITIZATION == STD_ON)
-
-                if(Immediate_Queue_Empty == FALSE){
-
-                    Current_Job = Immediate_Job_Queue[Immed_Queue_Indeces.Head] ;
-                }
-                else if(Standard_Queue_Empty == FALSE){
-
-                    Current_Job = Standard_Job_Queue[Stand_Queue_Indeces.Head] ;
-                }
-                else {
-
-                    Current_Job.ServiceId = NVM_INIT_API_ID ;
-                    Current_Job.Block_Id = 0 ;
-                    Current_Job.RAM_Ptr = NULL ;
-                }
-            #else
-
-                if(Standard_Queue_Empty == FALSE){
-
-                   Current_Job = Standard_Job_Queue[Stand_Queue_Indeces.Head] ;
-                }
-                else {
-
-                   Current_Job.ServiceId = NVM_INIT_API_ID ;
-                   Current_Job.Block_Id = 0 ;
-                   Current_Job.RAM_Ptr = NULL ;
-                }
-
-            #endif
+           Job_Dequeue() ;
+           Get_SingleJob( &Current_Job ) ;
 
            Current_State = INVALIDATE_NV_BLOCK ;
            break ;
@@ -1250,7 +1319,107 @@ void NvM_MainFunction_WriteAll( void )
 
 }
 
+/****************************************************************************************/
+/*    Function Name           : NvM_MainFunction                                        */
+/*    Function Description    : Service for performing the processing of the NvM jobs.  */
+/*    Parameter in            : none                                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : none                                                    */
+/*    Requirement             : SWS_NvM_00464                                           */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
+void NvM_MainFunction( void )
+{
+    static uint8 Current_State = GET_JOB ;
+    NvM_BlockIdType CRCBlockId ;
 
+    /* [SWS_NvM_00257]
+     * The NvM module shall only do/start job processing, queue management and CRC
+     * recalculation if the NvM_Init function has internally set an “INIT DONE” signal
+     */
+    if(ModuleState != INIT_DONE)
+    {
+        return ;
+    }
+
+    switch(Current_State)
+    {
+      case GET_JOB :
+
+          /* First get a single block job request if existed */
+          Get_SingleJob( &Current_Job ) ;
+
+          if(Current_Job.ServiceId != NVM_INIT_API_ID)
+          {
+              Current_State = EXECUTE_SINGLE_JOB ;
+          }
+          /* Second get a CRC request if existed */
+          else if(CRC_Queue_Empty == FALSE)
+          {
+              Current_State = EXECUTE_CRC_JOB ;
+          }
+          /* Third get a multi block request if existed */
+          else if(MultiBlcokRequest.ResultStatus == NVM_REQ_PENDING)
+          {
+              Current_State = EXECUTE_MULTI_JOB ;
+          }
+          break ;
+
+      case EXECUTE_SINGLE_JOB :
+
+          switch(Current_Job.ServiceId)
+          {
+            case NVM_READBLOCK_API_ID :
+
+                NvM_MainFunction_ReadBlock() ;
+                break ;
+
+            case NVM_WRITEBLOCK_API_ID :
+
+                NvM_MainFunction_WriteBlock() ;
+                break ;
+
+            case NVM_INVALIDATEBLOCK_API_ID :
+
+                NvM_MainFunction_InvalidateBlock() ;
+                break ;
+            case NVM_INIT_API_ID :
+
+                Current_State = GET_JOB ;
+                break ;
+          }
+          break ;
+
+      case EXECUTE_CRC_JOB :
+
+          CRCBlockId = CRC_Job_Queue[CRC_Queue_Indeces.Head] ;
+          /* AdministrativeBlock[CRCBlockId].PrevCRCVal = Calculate_CRC() ; */
+          CRCJob_Dequeue() ;
+          Current_State = GET_JOB ;
+          break ;
+
+      case EXECUTE_MULTI_JOB :
+
+          switch(MultiBlcokRequest.request)
+          {
+             case NVM_READ_ALL_API_ID :
+
+                 /* NvM_MainFunction_ReadAll() ; */
+                 break ;
+
+             case NVM_WRITE_ALL_API_ID :
+
+                 NvM_MainFunction_WriteAll() ;
+                 break ;
+          }
+          if((MultiBlcokRequest.ResultStatus == NVM_REQ_OK) || (MultiBlcokRequest.ResultStatus == NVM_REQ_NOT_OK))
+          {
+              Current_State = GET_JOB ;
+          }
+          break ;
+    }
+}
 
 
 

@@ -78,6 +78,9 @@ typedef struct
 /*                               Local Macros Definition                                 */
 /*****************************************************************************************/
 
+/*Size of CRC job queue*/
+#define NVM_SIZE_CRC_JOB_QUEUE      (10U)
+
 /*Permenant Ram block status*/
 #define INVALID_UNCHANGED           ((PRamStatusType)0U)
 #define VALID_UNCHANGED             ((PRamStatusType)1U)
@@ -125,6 +128,12 @@ typedef struct
 #define INVALIDATE_FAILED           (2U)
 #define INVALIDATE_END              (3U)
 
+/*Main function states*/
+#define GET_JOB                     (0U)
+#define EXECUTE_SINGLE_JOB          (1U)
+#define EXECUTE_CRC_JOB             (2U)
+#define EXECUTE_MULTI_JOB           (3U)
+
 /*****************************************************************************************/
 /*                                   Local variables Definition                          */
 /*****************************************************************************************/
@@ -141,12 +150,17 @@ static MultiBlockRequestType MultiBlcokRequest ;
 /*                                   Local Functions Prototypes                          */
 /*****************************************************************************************/
 
- Std_ReturnType Job_Enqueue(Job_Parameters Job) ;
- Std_ReturnType Job_Dequeue(Job_Parameters* Job) ;
- void Init_Queue(void) ;
- Std_ReturnType Search_Queue(NvM_BlockIdType BlockId) ;
- void NvM_Main_Write(void) ;
- static void NvM_MainFunction_InvalidateBlock(void) ;
+void Init_Queues(void) ;
+Std_ReturnType Search_Queue(NvM_BlockIdType BlockId) ;
+Std_ReturnType Job_Enqueue(Job_Parameters Job) ;
+Std_ReturnType Job_Dequeue(void) ;
+void Get_SingleJob(Job_Parameters* Job) ;
+Std_ReturnType CRCJob_Enqueue(NvM_BlockIdType BlockId) ;
+Std_ReturnType CRCJob_Dequeue(void) ;
+
+void NvM_MainFunction_WriteBlock(void) ;
+void NvM_MainFunction_InvalidateBlock(void) ;
+void NvM_MainFunction_WriteAll( void ) ;
 
 /*****************************************************************************************/
 /*                                   external variables                                  */
@@ -169,19 +183,29 @@ static AdministrativeBlockType AdministrativeBlock[NUMBER_OF_NVM_BLOCKS];
  *queue the read request in the job queue and return
  *Hint: this requirement is the same for all asynchronous single block requests.
  */
-// standard job queue
-static Job_Parameters Standard_Job_Queue[NVM_SIZE_STANDARD_JOB_QUEUE];
-static Queue_Indices_Struct Stand_Queue_Indeces = {0, 0};
+/* standard job queue */
+static Job_Parameters Standard_Job_Queue[NVM_SIZE_STANDARD_JOB_QUEUE] ;
+static Queue_Indices_Struct Stand_Queue_Indeces = {0, 0} ;
 
 /*[SWS_NvM_00378]
  * In case of priority based job processing order,
  * the NvM module shall use two queues, one for immediate write jobs (crash data) another for all other jobs.
  */
-// immediate job queue
+/* immediate job queue */
 #if (NVM_JOB_PRIORITIZATION == STD_ON)
-  static Job_Parameters Immediate_Job_Queue[NVM_SIZE_IMMEDIATE_JOB_QUEUE];
-  static Queue_Indices_Struct Immed_Queue_Indeces = {0, 0};
+  static Job_Parameters Immediate_Job_Queue[NVM_SIZE_IMMEDIATE_JOB_QUEUE] ;
+  static Queue_Indices_Struct Immed_Queue_Indeces = {0, 0} ;
 #endif
+
+/*[SWS_NvM_00121] For blocks with a permanently configured RAM,
+ * the function NvM_SetRamBlockStatus shall request the recalculation of
+ * CRC in the background, i.e. the CRC recalculation shall be processed by
+ * the NvM_MainFunction, if the given “BlockChanged” parameter is TRUE and
+ * CRC calculation in RAM is configured.
+ */
+/* CRC job queue */
+static NvM_BlockIdType CRC_Job_Queue[NVM_SIZE_CRC_JOB_QUEUE] ;
+static Queue_Indices_Struct CRC_Queue_Indeces = {0, 0} ;
 
 /*Variable to save module state*/
 static ModuleStateType ModuleState = MODULE_UNINITIALIZED ;
@@ -195,13 +219,16 @@ static uint8 TempBuffer[LARGEST_BLOCK_SIZE] ;
 /*****************************************************************************************/
 /*                                   Queue Flags                                         */
 /*****************************************************************************************/
-static boolean Standard_Queue_Empty = TRUE;
-static boolean Standard_Queue_FULL = FALSE;
+static boolean Standard_Queue_Empty = TRUE ;
+static boolean Standard_Queue_FULL = FALSE ;
 
 #if (NVM_JOB_PRIORITIZATION == STD_ON)
-  static boolean Immediate_Queue_Empty = TRUE;
-  static boolean Immediate_Queue_FULL = FALSE;
+  static boolean Immediate_Queue_Empty = TRUE ;
+  static boolean Immediate_Queue_FULL = FALSE ;
 #endif
+
+static boolean CRC_Queue_Empty = TRUE ;
+static boolean CRC_Queue_Full = FALSE ;
 
 
 #endif
