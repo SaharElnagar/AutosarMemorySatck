@@ -806,6 +806,12 @@ void NvM_MainFunction_WriteBlock(void)
          Retry_Counter = 0;
          redundant_block_Num = 0;
 
+         /* [SWS_NvM_00347]
+          * If callback routines are configured, the function NvM_MainFunction shall call
+          * callback routines to the upper layer after completion of an asynchronous service.
+          */
+         NvMBlockDescriptor[Current_Job.Block_Id].NvMSingleBlockCallback(NVM_WRITEBLOCK_API_ID, AdministrativeBlock[Current_Job.Block_Id].BlockStatus) ;
+
          Job_Dequeue() ;
          Get_SingleJob( &Current_Job ) ;
 
@@ -1014,12 +1020,18 @@ void NvM_MainFunction_InvalidateBlock(void)
       case INVALIDATE_END :
 
            redundant_block_Num = 0 ;
+
+           /* [SWS_NvM_00347]
+            * If callback routines are configured, the function NvM_MainFunction shall call
+            * callback routines to the upper layer after completion of an asynchronous service.
+            */
+           NvMBlockDescriptor[Current_Job.Block_Id].NvMSingleBlockCallback(NVM_INVALIDATEBLOCK_API_ID, AdministrativeBlock[Current_Job.Block_Id].BlockStatus) ;
+
            Job_Dequeue() ;
            Get_SingleJob( &Current_Job ) ;
 
            Current_State = INVALIDATE_NV_BLOCK ;
            break ;
-
     }
 
 }
@@ -1084,8 +1096,10 @@ void NvM_MainFunction_WriteAll( void )
     static uint8 redundant_block_Num = 0 ;
     static uint8 Retry_Counter ;
     static boolean FailedJob = FALSE ;
+
     uint32 CrcCounter = 0 ;
     uint32 Fee_Ea_Block_Num ;
+    Std_ReturnType InitWrite ;
 
     switch(MultiBlcokRequest.Internal_state){
 
@@ -1137,8 +1151,6 @@ void NvM_MainFunction_WriteAll( void )
                   else if(NvMBlockDescriptor[IdCounter].NvMBlockManagement == NVM_BLOCK_REDUNDANT){
                       Fee_Ea_Block_Num = (NvMBlockDescriptor[IdCounter].NvMNvBlockBaseNumber << NVM_DATASET_SELECTION_BITS) + redundant_block_Num ;
                   }
-
-                  Std_ReturnType InitWrite ;
 
                   if(NvMBlockDescriptor[IdCounter].NvMBlockUseCrc == TRUE && NvMBlockDescriptor[IdCounter].NvMCalcRamBlockCrc == TRUE){
 
@@ -1289,6 +1301,8 @@ void NvM_MainFunction_WriteAll( void )
           /*if the blocks IDs finishes*/
           if(IdCounter >= NUMBER_OF_NVM_BLOCKS){
 
+              IdCounter = 2 ;
+
               /* [SWS_NvM_00318]
                * The job of the function NvM_WriteAll shall set the multi block request result
                * to NVM_REQ_NOT_OK if processing of one or even more NVRAM blocks fails.
@@ -1345,6 +1359,7 @@ void NvM_MainFunction( void )
 
     switch(Current_State)
     {
+      /* case 0 : Get a job */
       case GET_JOB :
 
           /* First get a single block job request if existed */
@@ -1366,6 +1381,7 @@ void NvM_MainFunction( void )
           }
           break ;
 
+      /* case 1 : Execute a single block job request */
       case EXECUTE_SINGLE_JOB :
 
           switch(Current_Job.ServiceId)
@@ -1384,6 +1400,7 @@ void NvM_MainFunction( void )
 
                 NvM_MainFunction_InvalidateBlock() ;
                 break ;
+
             case NVM_INIT_API_ID :
 
                 Current_State = GET_JOB ;
@@ -1391,6 +1408,7 @@ void NvM_MainFunction( void )
           }
           break ;
 
+      /* case 2 : Execute a CRC request job */
       case EXECUTE_CRC_JOB :
 
           CRCBlockId = CRC_Job_Queue[CRC_Queue_Indeces.Head] ;
@@ -1399,6 +1417,7 @@ void NvM_MainFunction( void )
           Current_State = GET_JOB ;
           break ;
 
+      /* case 3 : Execute a multi block job request */
       case EXECUTE_MULTI_JOB :
 
           switch(MultiBlcokRequest.request)

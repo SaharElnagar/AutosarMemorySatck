@@ -193,10 +193,10 @@ typedef struct
      */
     uint32*                 NvMRamBlockDataAddress  ;
 
-    /*ECUC_NvM_00521
-      Defines the start address of the RAM block data.
-      If this is not configured, no permanent RAM data block is available for the selected block management type.
-      */
+    /* ECUC_NvM_00521
+     * Entry address of a block specific callback routine which shall be called in order
+     * to let the application copy data from the NvM module's mirror to RAM block.
+     */
     Std_ReturnType (* NvMReadRamBlockFromNvCallback)(const void* NvMBuffer) ;
 
     /*
