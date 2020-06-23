@@ -12,8 +12,11 @@ GEN_CMDS__FLAG :=
 ORDERED_OBJS += \
 "./main.obj" \
 "./tm4c123gh6pm_startup_ccs.obj" \
+"./bsw/gen/Fee_Cfg.obj" \
 "./bsw/gen/NvM_Lcfg.obj" \
 "./bsw/static/Interface/EA/src/Ea.obj" \
+"./bsw/static/Interface/FEE/src/Fee.obj" \
+"./bsw/static/Interface/FEE/src/Fee_Sector.obj" \
 "./bsw/static/Mcal/Eep/src/Eep.obj" \
 "./bsw/static/Mcal/Flash/src/Flash.obj" \
 "./bsw/static/Service/NvM/src/NvM.obj" \
@@ -33,6 +36,7 @@ RMDIR := RMDIR /S/Q
 -include subdir_vars.mk
 -include bsw/gen/subdir_vars.mk
 -include bsw/static/Interface/EA/src/subdir_vars.mk
+-include bsw/static/Interface/FEE/src/subdir_vars.mk
 -include bsw/static/Mcal/Eep/src/subdir_vars.mk
 -include bsw/static/Mcal/Flash/src/subdir_vars.mk
 -include bsw/static/Service/NvM/src/subdir_vars.mk
@@ -40,6 +44,7 @@ RMDIR := RMDIR /S/Q
 -include subdir_rules.mk
 -include bsw/gen/subdir_rules.mk
 -include bsw/static/Interface/EA/src/subdir_rules.mk
+-include bsw/static/Interface/FEE/src/subdir_rules.mk
 -include bsw/static/Mcal/Eep/src/subdir_rules.mk
 -include bsw/static/Mcal/Flash/src/subdir_rules.mk
 -include bsw/static/Service/NvM/src/subdir_rules.mk
@@ -174,8 +179,8 @@ MemoryStack.hex: $(EXE_OUTPUTS)
 # Other Targets
 clean:
 	-$(RM) $(BIN_OUTPUTS__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "main.obj" "tm4c123gh6pm_startup_ccs.obj" "bsw\gen\NvM_Lcfg.obj" "bsw\static\Interface\EA\src\Ea.obj" "bsw\static\Mcal\Eep\src\Eep.obj" "bsw\static\Mcal\Flash\src\Flash.obj" "bsw\static\Service\NvM\src\NvM.obj" "bsw\static\Service\NvM\src\NvM_2.obj" "bsw\stub\stub.obj" 
-	-$(RM) "main.d" "tm4c123gh6pm_startup_ccs.d" "bsw\gen\NvM_Lcfg.d" "bsw\static\Interface\EA\src\Ea.d" "bsw\static\Mcal\Eep\src\Eep.d" "bsw\static\Mcal\Flash\src\Flash.d" "bsw\static\Service\NvM\src\NvM.d" "bsw\static\Service\NvM\src\NvM_2.d" "bsw\stub\stub.d" 
+	-$(RM) "main.obj" "tm4c123gh6pm_startup_ccs.obj" "bsw\gen\Fee_Cfg.obj" "bsw\gen\NvM_Lcfg.obj" "bsw\static\Interface\EA\src\Ea.obj" "bsw\static\Interface\FEE\src\Fee.obj" "bsw\static\Interface\FEE\src\Fee_Sector.obj" "bsw\static\Mcal\Eep\src\Eep.obj" "bsw\static\Mcal\Flash\src\Flash.obj" "bsw\static\Service\NvM\src\NvM.obj" "bsw\static\Service\NvM\src\NvM_2.obj" "bsw\stub\stub.obj" 
+	-$(RM) "main.d" "tm4c123gh6pm_startup_ccs.d" "bsw\gen\Fee_Cfg.d" "bsw\gen\NvM_Lcfg.d" "bsw\static\Interface\EA\src\Ea.d" "bsw\static\Interface\FEE\src\Fee.d" "bsw\static\Interface\FEE\src\Fee_Sector.d" "bsw\static\Mcal\Eep\src\Eep.d" "bsw\static\Mcal\Flash\src\Flash.d" "bsw\static\Service\NvM\src\NvM.d" "bsw\static\Service\NvM\src\NvM_2.d" "bsw\stub\stub.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

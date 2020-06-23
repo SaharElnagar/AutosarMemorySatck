@@ -30,5 +30,10 @@
 			<type>2</type>
 			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/bsw</locationURI>
 		</link>
+		<link>
+			<name>bsw/static/Interface/FEE/src/Fee.c</name>
+			<type>1</type>
+			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/bsw/static/Interface/FEE/src/Fee.c</locationURI>
+		</link>
 	</linkedResources>
 </projectDescription>

@@ -1081,7 +1081,7 @@ void NvM_WriteAll( void )
 
 /****************************************************************************************/
 /*    Function Name           : NvM_MainFunction_WriteAll                               */
-/*    Function Description    : Asynchronous processing of Write All job                */
+/*    Function Description    : Asynchronous processing of Write All job request        */
 /*    Parameter in            : none                                                    */
 /*    Parameter inout         : none                                                    */
 /*    Parameter out           : none                                                    */
