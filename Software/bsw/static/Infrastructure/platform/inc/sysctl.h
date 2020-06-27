@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 //*****************************************************************************
 //
 // sysctl.h - Prototypes for the system control driver.
@@ -594,7 +594,7 @@ void SysCtlPeripheralReset(uint32  ui32Peripheral);
 #endif
 
 #endif // __DRIVERLIB_SYSCTL_H__
-=======
+
 //*****************************************************************************
 //
 // sysctl.h - Prototypes for the system control driver.
@@ -1190,4 +1190,4 @@ void SysCtlPeripheralReset(uint32  ui32Peripheral);
 #endif
 
 #endif // __DRIVERLIB_SYSCTL_H__
->>>>>>> 4eff1a0de4abfab9d96caad946f54dcf2e90c54c
+

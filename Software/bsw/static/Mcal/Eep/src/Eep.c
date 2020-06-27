@@ -88,7 +88,6 @@
 /*                                   Local Function Definitions                          */
 /*****************************************************************************************/
 static void SysCtlDelay(uint32  ui32Count) ;
-static void SysCtlPeripheralReset(uint32  ui32Peripheral);
 static void _EEPROMSectorMaskClear(void) ;
 static void _EEPROMSectorMaskSet(uint32 ui32Address);
 static void Eep_MainFunction_Read(void) ;
@@ -147,7 +146,7 @@ _EEPROMSectorMaskClear(void)
 }
 
 /***********************************************************************************/
-#if defined(ewarm) || defined(DOXYGEN)
+/*#if defined(ewarm) || defined(DOXYGEN)
 void
 SysCtlDelay(uint32  ui32Count)
 {
@@ -173,34 +172,8 @@ SysCtlDelay(uint32  ui32Count)
     bne     SysCtlDelay;
     bx      lr;
 }
-#endif
+#endif*/
 /***************************************************************************/
-static void SysCtlPeripheralReset(uint32  ui32Peripheral)
-{
-    volatile uint8  ui8Delay;
-
-
-    //
-    // Put the peripheral into the reset state.
-    //
-    HWREGBITW(SYSCTL_SRBASE + ((ui32Peripheral & 0xff00) >> 8),
-              ui32Peripheral & 0xff) = 1;
-
-    //
-    // Delay for a little bit.
-    //
-    for(ui8Delay = 0; ui8Delay < 16; ui8Delay++)
-    {
-    }
-
-    //
-    // Take the peripheral out of the reset state.
-    //
-    HWREGBITW(SYSCTL_SRBASE + ((ui32Peripheral & 0xff00) >> 8),
-              ui32Peripheral & 0xff) = 0;
-}
-
-
 
 //*****************************************************************************
 //  Strut to save the required data for the reading process
