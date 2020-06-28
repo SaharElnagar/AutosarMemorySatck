@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<configurations XML_version="1.2" id="configurations_0">
+    <configuration XML_version="1.2" id="Stellaris In-Circuit Debug Interface_0">
+        <instance XML_version="1.2" desc="Stellaris In-Circuit Debug Interface_0" href="connections/Stellaris_ICDI_Connection.xml" id="Stellaris In-Circuit Debug Interface_0" xml="Stellaris_ICDI_Connection.xml" xmlpath="connections"/>
+        <connection XML_version="1.2" id="Stellaris In-Circuit Debug Interface_0">
+            <instance XML_version="1.2" href="drivers/stellaris_cs_dap.xml" id="drivers" xml="stellaris_cs_dap.xml" xmlpath="drivers"/>
+            <instance XML_version="1.2" href="drivers/stellaris_cortex_m4.xml" id="drivers" xml="stellaris_cortex_m4.xml" xmlpath="drivers"/>
+            <platform XML_version="1.2" id="platform_0">
+                <instance XML_version="1.2" desc="Tiva TM4C123GH6PM_0" href="devices/tm4c123gh6pm.xml" id="Tiva TM4C123GH6PM_0" xml="tm4c123gh6pm.xml" xmlpath="devices"/>
+            <instance XML_version="1.2" desc="Tiva TM4C123GH6PM_1" href="devices/tm4c123gh6pm.xml" id="Tiva TM4C123GH6PM_1" xml="tm4c123gh6pm.xml" xmlpath="devices"/>
+                <device HW_revision="1" XML_version="1.2" description="" id="Tiva TM4C123GH6PM_1" partnum="TM4C123GH6PM">
+                    <router HW_revision="1.0" XML_version="1.2" desc="CS_DAP_1" description="CS_DAP Router" id="CS_DAP_0" isa="CS_DAP">
+                        <subpath desc="subpath_1" id="subpath_0">
+                            <cpu HW_revision="1.0" XML_version="1.2" desc="CORTEX_M4_1" description="Cortex M4 CPU" id="CORTEX_M4_0" isa="CORTEX_M4"/>
+                        </subpath>
+                    </router>
+                </device>
+            </platform>
+        </connection>
+    </configuration>
+</configurations>

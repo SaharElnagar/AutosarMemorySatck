@@ -60,7 +60,7 @@
 /*My Note :Setting the virtual page size depends on
  *  how much data we want to combine together as a unit
  *  */
-#define EA_VIRTUAL_PAGE_SIZE                PHYSICAL_WORD_SIZE *2
+#define EA_VIRTUAL_PAGE_SIZE                PHYSICAL_WORD_SIZE
 
 /*******************************************************************************/
 // EaBlockConfiguration  Container's configuration
@@ -68,7 +68,7 @@
 /*******************************************************************************/
 
 /*Number of blocks configured*/
-#define BLOCKS_NUM                          (3U)
+#define EA_BLOCKS_NUM                           (2U)
 
 /*Block identifier (handle). 0x0000 and 0xFFFF shall not be used for block numbers (see SWS_Ea_00006).
   Range:   min = 2^NVM_DATASET_SELECTION_BITS
@@ -76,21 +76,20 @@
   Note: Depending on the number of bits set aside for dataset selection several other block numbers
   shall also be left out to ease implementation.
 */
-#define EA_BLOCK_0_NUMBER                   (1U)
-#define EA_BLOCK_1_NUMBER                   (5U)
-#define EA_BLOCK_2_NUMBER                   (18U)
+#define EA_BLOCK_0_NUMBER                       (1U)
+#define EA_BLOCK_1_NUMBER                       (5U)
+
 
 /*Size of a logical block in bytes. */
-#define  EA_BLOCK_0_SIZE                    (32U)
-#define  EA_BLOCK_1_SIZE                    (100U)
-#define  EA_BLOCK_2_SIZE                    (16U)
+#define  EA_BLOCK_0_SIZE                        (32U)
+#define  EA_BLOCK_1_SIZE                        (15U)
+
 
 /*  Marker for high priority data. true: Block contains immediate data.
  *  false: Block does not contain immediate data.
  */
 #define EA_BLOCK_0_IMMEDIATE_DATA             (0U)             /*False*/
 #define EA_BLOCK_1_IMMEDIATE_DATA             (0U)             /*False*/
-#define EA_BLOCK_2_IMMEDIATE_DATA             (0U)             /*False*/
 
 /*Reference to the device this block is stored in*/
 #define  _DEVICE_INDEX                        (0U)

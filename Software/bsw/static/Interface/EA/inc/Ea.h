@@ -14,6 +14,8 @@
 
 #ifndef EA_H_
 #define EA_H_
+
+#include "Eep.h"
 #include "Ea_Cfg.h"
 #include "stub.h"
 /*******************************************************************************/
@@ -34,6 +36,7 @@
 #define EA_WRITE_API_ID            (3U)
 #define EA_CANCEL_API_ID           (4U)
 #define EA_GET_STATUS_API_ID       (5U)
+#define EA_INVALIDATE_BLOCK_API    (7U)
 #define EA_MAINFUNCTION            (12U)
 
 /*******************************************************************************/

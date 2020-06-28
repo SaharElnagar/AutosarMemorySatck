@@ -22,14 +22,6 @@
  * */
 
 /*****************************************************************************************/
-/*                                   Local Function Definitions                          */
-/*****************************************************************************************/
-static void Ea_MainFunction_Read(void)    ;
-static void Ea_MainFunction_Write(void)   ;
-static void Ea_MainFunction_Erase(void)   ;
-static void Ea_MainFunction_Invalidate(void) ;
-
-/*****************************************************************************************/
 /*                                   Include Common headres                              */
 /*****************************************************************************************/
 
@@ -42,14 +34,24 @@ static void Ea_MainFunction_Invalidate(void) ;
 /*                                   Include Component headres                           */
 /*****************************************************************************************/
 #include "Ea.h"
+#include "Ea_PrivateTypes.h"
+
+
+/*****************************************************************************************/
+/*                                   Local Function Definitions                          */
+/*****************************************************************************************/
+static void Ea_MainFunction_Read(void)    ;
+static void Ea_MainFunction_Write(void)   ;
+static void Ea_MainFunction_Invalidate(void) ;
+static Std_ReturnType Find_Block(uint16 BlockNum );
+static Std_ReturnType Find_Blocksize(uint16 BlockNum,uint16* Blocksize) ;
+static Std_ReturnType Set_BlockStatus(uint16 BlockIndex , uint32* Status) ;
+static Std_ReturnType Get_BlockStatus(uint16 BlockIndex , uint32* Status) ;
+static Std_ReturnType RequestEepJob(uint16 BlockIndex , uint8* DataPtr, uint8 JobReq,uint16 Len) ;
 /*****************************************************************************************/
 /*                                   Local Macro Definition                              */
 /*****************************************************************************************/
-/*The first logical Block number of this module */
-#define MODULE_LOGICAL_START_ADDRESS    EA_BLOCK_0_NUMBER
 
-/*The Last logical Block number of this module */
-#define MODULE_LOGICAL_END_ADDRESS      EA_BLOCK_2_NUMBER
 
 /*Macro to calculate physical Writing address*/
 #define CALC_PHSICAL_W_ADD(LogialBlockNum)          ((LogialBlockNum - MODULE_LOGICAL_START_ADDRESS)*\
@@ -64,6 +66,24 @@ static void Ea_MainFunction_Invalidate(void) ;
 #define ERASE_JOB       0x03
 #define INVALIDATE_JOB  0x04
 
+//*****************************************************************************
+//  BLOCK header states
+//  1-[SRS_MemHwAb_14014] The FEE and EA modules shall detect possible
+//  data inconsistencies due to aborted / interrupted write operations
+//  2-[SWS_Ea_00091] [SWS_Ea_00074] each block can be requested
+//  by the upper layer module to invalid
+//*****************************************************************************
+#define EA_BLOCK_HEADER_SIZE        (0x04U)
+#define EA_INVALID_BLOCk            (0xFFFFFFFF)
+#define EA_INCONSISTANT_BLOCK       (0xFFFFFF00)
+#define EA_VALID_BLOCK              (0xFFFF0000)
+
+
+//*****************************************************************************
+//  Module internal states
+//*****************************************************************************
+
+
 /*****************************************************************************************/
 /*                                   Local types Definition                              */
 /*****************************************************************************************/
@@ -77,49 +97,29 @@ static void Ea_MainFunction_Invalidate(void) ;
 //*****************************************************************************
 typedef struct
 {
-    uint16 BlockID ;
-    Eep_AddressType PhysicalStartAddress ;
+    uint16 BlockIndex ;
     uint16 Len;
     uint8* DataBufPtr;
 }str_ParametersCopy;
 
 //*****************************************************************************
-// data type to represent each block's state
+//  Internal Main_function states to handle a job request
 //*****************************************************************************
-
-typedef uint8 ConsistencyType ;
-#define CONSISTENT             ((ConsistencyType)0U)
-#define INCONSISTENT           ((ConsistencyType)1U)
-
-typedef uint8 ValidationType ;
-#define VALID_BLOCK            ((ValidationType)0U)
-#define INVALID_BLOCK          ((ValidationType)1U)
-
-//*****************************************************************************
-//  Strut to save each block's  state
-//  1-[SRS_MemHwAb_14014] The FEE and EA modules shall detect possible
-//  data inconsistencies due to aborted / interrupted write operations
-//  2-[SWS_Ea_00091] [SWS_Ea_00074] each block can be requested
-//  by the upper layer module to invalid
-//  BlockNum         : Logical Block number
-//  ConsistencyState : Boolean Value to save state
-//*****************************************************************************
-typedef struct
+typedef enum
 {
-    uint16  BlockNum ;
-    ConsistencyType Consistency :1 ;
-    ValidationType  Validation  :1 ;
-}str_BlockState;
-
+    Read_block_status   ,
+    Read_block          ,
+    Write_block_Status  ,
+    Write_block         ,
+    End_job             ,
+    Failed_job          ,
+}InternalStatesType;
 /*****************************************************************************************/
 /*                                Local Variables Definition                             */
 /*****************************************************************************************/
 
 /*Variable to save the module state*/
 static MemIf_StatusType EA_ModuleState = MEMIF_UNINIT ;
-
-/*Array to save each block size in bytes*/
- uint16 EA_BlocksSize[] = {EA_BLOCK_0_SIZE ,EA_BLOCK_1_SIZE ,EA_BLOCK_2_SIZE} ;
 
 /*Struct to save the Read and Write functions parameters*/
 static str_ParametersCopy ParametersCopy ;
@@ -130,8 +130,20 @@ static MemIf_JobResultType JobResult = MEMIF_JOB_OK;
 /*Variable to current processing job*/
 static uint8 JobProcessing_State     = IDLE_JOB;
 
-/*struct to save each block state of validation and consistency */
-static str_BlockState BlockState[BLOCKS_NUM];
+static uint8 Eep_JobDone =0;
+
+static uint8 Eep_JobError =0;
+
+static Std_ReturnType ret_val1 ;
+
+static uint32 BlockStatus ;
+
+static InternalStatesType InternalStates;
+/*****************************************************************************************/
+/*                                extern Variables                                       */
+/*****************************************************************************************/
+extern Ea_BlockConfigType Ea_BlockSConfig[EA_BLOCKS_NUM];
+
 
 /*****************************************************************************************/
 /*                                   Global Function Definition                          */
@@ -162,27 +174,27 @@ uint16 BlockCounter = 0;
 #endif
 
 
-
     /*[SWS_Ea_00017] The function Ea_Init shall shall set the module state from MEMIF_UNINIT
      * to MEMIF_BUSY_INTERNAL once it starts the module’s initialization. (SRS_BSW_00101)
      */
     EA_ModuleState = MEMIF_BUSY_INTERNAL ;
 
-    /*Implement internal initializations*/
+    /*First Block address = first address in EEPROM*/
+    Ea_BlockSConfig[0].PhysicalStartAddress = EEP_START_ADDRESS;
+    /*calculate each block physical start address*/
+    for(BlockCounter= 1 ; BlockCounter<EA_BLOCKS_NUM ; BlockCounter++)
+    {
+        /*Each block start address = previous block address + header size + previous block size*/
+        Ea_BlockSConfig[BlockCounter].PhysicalStartAddress =\
+        Ea_BlockSConfig[BlockCounter-1].PhysicalStartAddress + EA_BLOCK_HEADER_SIZE + Ea_BlockSConfig[BlockCounter-1].BlockSize;
+    }
 
-    /*Save each block initialized state as consistent and valid*/
-     for(BlockCounter = 0 ;BlockCounter < BLOCKS_NUM ; BlockCounter++)
-     {
-         BlockState[BlockCounter].Consistency = CONSISTENT  ;
-         BlockState[BlockCounter].Validation  = VALID_BLOCK ;
-     }
 
     /*[SWS_Ea_00128]  If initialization is finished within Ea_Init, the function Ea_Init
      *  shall set the module state from MEMIF_BUSY_INTERNAL to MEMIF_IDLE once initialization
      *   has been successfully finished. (SRS_BSW_00406
      */
     EA_ModuleState = MEMIF_IDLE ;
-
 }
 
 /****************************************************************************************/
@@ -200,9 +212,7 @@ uint16 BlockCounter = 0;
 Std_ReturnType Ea_Read(uint16 BlockNumber,uint16 BlockOffset,uint8* DataBufferPtr, uint16 Length )
 {
     uint16 BlockSize  = 0;
-    uint16 Sum        = 0;
-    uint16 BlockCount = 0;
-
+    Std_ReturnType rtn_val = E_OK ;
     /*
      * [SWS_Ea_00130] If development error detection for the module EA is enabled:
      *  the function Ea_Read shall check if the module state is MEMIF_UNINIT.
@@ -215,7 +225,7 @@ Std_ReturnType Ea_Read(uint16 BlockNumber,uint16 BlockOffset,uint8* DataBufferPt
             Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_READ_API_ID, EA_E_UNINIT);
         #endif
 
-        return E_NOT_OK ;
+        rtn_val =  E_NOT_OK ;
     }
     /*Check parameter pointer is NULL*/
     else if(DataBufferPtr == NULL_PTR)
@@ -224,7 +234,7 @@ Std_ReturnType Ea_Read(uint16 BlockNumber,uint16 BlockOffset,uint8* DataBufferPt
             Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_READ_API_ID, EA_E_PARAM_POINTER);
         #endif
 
-        return E_NOT_OK ;
+        rtn_val =  E_NOT_OK ;
     }
 
     /*
@@ -232,14 +242,13 @@ Std_ReturnType Ea_Read(uint16 BlockNumber,uint16 BlockOffset,uint8* DataBufferPt
      * the function Ea_Read shall check whether the given block number is valid
      *  (i.e. inside the configured range)
      */
-    else if((BlockNumber < MODULE_LOGICAL_START_ADDRESS) || (BlockNumber > MODULE_LOGICAL_END_ADDRESS))
+    else if((Find_Block(BlockNumber)== E_NOT_OK) ||(BlockNumber == 0) ||( BlockNumber == 0xFFFF))
     {
         #if(EA_DEV_ERROR_DETECT == STD_ON)
             Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_READ_API_ID, EA_E_INVALID_BLOCK_NO);
         #endif
 
-        JobResult =MEMIF_BLOCK_INVALID ;
-        return E_NOT_OK ;
+        rtn_val =  E_NOT_OK ;
     }
     /*[SWS_Ea_00167] The function Ea_Read shall check if the module state is MEMIF_BUSY.
      * If this is the case, the function Ea_Read shall reject the read request,
@@ -249,31 +258,7 @@ Std_ReturnType Ea_Read(uint16 BlockNumber,uint16 BlockOffset,uint8* DataBufferPt
     {
         /*report error to DEM Module to report runtime error*/
 
-        return E_NOT_OK ;
-    }
-
-    /* Get Block configured size
-     * Each block number depends on the previous preserved virtual pages for the previous blocks
-     * [SWS_Ea_00005]Each configured logical block shall take up an integer multiple of the configured
-     * virtual page size (see also Chapter 10.2.3, configuration parameter EA_VIRTUAL_PAGE_SIZE .
-     * [SWS_Ea_00068]  Logical blocks must not overlap each other and must not be contained
-     *  within one another.  (SRS_MemHwAb_14001)
-     * */
-    for(BlockCount = 0 ;BlockCount <BLOCKS_NUM ; BlockCount++)
-    {
-        if((BlockNumber-MODULE_LOGICAL_START_ADDRESS) == Sum)
-        {
-           /*Get Block size in bytes*/
-            BlockSize = EA_BlocksSize[BlockCount] ;
-            /*Get block ID in the module */
-            ParametersCopy.BlockID = BlockCount ;
-            break;
-        }
-        else
-        {
-           /*Add the number of previous occupied pages */
-            Sum+= EA_BlocksSize[BlockCount] / EA_VIRTUAL_PAGE_SIZE ;
-        }
+        rtn_val =  E_NOT_OK ;
     }
 
     /*
@@ -281,13 +266,16 @@ Std_ReturnType Ea_Read(uint16 BlockNumber,uint16 BlockOffset,uint8* DataBufferPt
      *  the function Ea_Read shall check that the given block offset is valid
      *  (i.e. that it is less than the block length configured for this block)
      */
-    if(BlockOffset > BlockSize)
+    else if(Find_Blocksize(BlockNumber,&BlockSize)== E_OK )
     {
-        #if(EA_DEV_ERROR_DETECT == STD_ON)
-            Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_READ_API_ID, EA_E_INVALID_BLOCK_OFS);
-        #endif
+        if(BlockOffset >= BlockSize)
+        {
+            #if(EA_DEV_ERROR_DETECT == STD_ON)
+                Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_READ_API_ID, EA_E_INVALID_BLOCK_OFS);
+            #endif
 
-        return E_NOT_OK ;
+            rtn_val =  E_NOT_OK ;
+        }
     }
 
     /*
@@ -298,19 +286,17 @@ Std_ReturnType Ea_Read(uint16 BlockNumber,uint16 BlockOffset,uint8* DataBufferPt
      *  If this is not the case, the function Ea_Read shall reject the read request,
      *  raise the development error EA_E_INVALID_BLOCK_LEN and return with E_NOT_OK.
      */
-    else if((Length + BlockOffset)  > (CALC_PHSICAL_R_ADD(BlockNumber,BlockOffset)+ BlockSize ))
+    else if((Length + BlockOffset)  >  BlockSize )
     {
     #if(EA_DEV_ERROR_DETECT == STD_ON)
         Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_READ_API_ID, EA_E_INVALID_BLOCK_LEN);
     #endif
 
-    return E_NOT_OK ;
+    rtn_val =  E_NOT_OK ;
     }
     else
     {
         /*Save Parameters to be used in the main function*/
-
-        ParametersCopy.PhysicalStartAddress = CALC_PHSICAL_R_ADD(BlockNumber,BlockOffset) ;
         ParametersCopy.Len        = Length ;
         ParametersCopy.DataBufPtr = DataBufferPtr ;
 
@@ -320,10 +306,17 @@ Std_ReturnType Ea_Read(uint16 BlockNumber,uint16 BlockOffset,uint8* DataBufferPt
         /*Set module state to busy*/
         EA_ModuleState = MEMIF_BUSY ;
 
+        /*Reset Job done flag and Error flag*/
+        Eep_JobDone = 0 ;
+        Eep_JobError = 0 ;
+
+        /*Set Internal state*/
+        InternalStates = Read_block_status ;
+
         /*Set current job result to pending*/
         JobResult = MEMIF_JOB_PENDING ;
     }
-    return E_OK ;
+    return rtn_val ;
 }
 
 
@@ -340,9 +333,7 @@ Std_ReturnType Ea_Read(uint16 BlockNumber,uint16 BlockOffset,uint8* DataBufferPt
 /****************************************************************************************/
 Std_ReturnType Ea_Write( uint16 BlockNumber,const uint8* DataBufferPtr )
 {
-    uint16 BlockSize  = 0;
-    uint16 Sum        = 0;
-    uint16 BlockCount = 0;
+    Std_ReturnType rtn_val = E_OK ;
 
     /*[SWS_Ea_00181] If the current module status is MEMIF_UNINIT or MEMIF_BUSY,
      * the function Ea_Write shall reject the job request and return with E_NOT_OK.
@@ -354,7 +345,7 @@ Std_ReturnType Ea_Write( uint16 BlockNumber,const uint8* DataBufferPtr )
             Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_WRITE_API_ID, EA_E_UNINIT);
         #endif
 
-        return E_NOT_OK ;
+        rtn_val =E_NOT_OK ;
     }
 
     /*[SWS_Ea_00172] If development error detection is enabled for the module:
@@ -369,7 +360,7 @@ Std_ReturnType Ea_Write( uint16 BlockNumber,const uint8* DataBufferPtr )
             Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_WRITE_API_ID, EA_E_PARAM_POINTER);
         #endif
 
-        return E_NOT_OK ;
+        rtn_val =E_NOT_OK ;
     }
     /*[SWS_Ea_00181] If the current module status is MEMIF_UNINIT or MEMIF_BUSY,
      * the function Ea_Write shall reject the job request and return with E_NOT_OK.
@@ -379,70 +370,79 @@ Std_ReturnType Ea_Write( uint16 BlockNumber,const uint8* DataBufferPtr )
     {
         /*Call DEM module to report runtime error*/
 
-        return E_NOT_OK ;
+        rtn_val =E_NOT_OK ;
     }
 
-
-    /*
-    * [SWS_Ea_00147]If development error detection is enabled for the module:
-    * the function Ea_Read shall check whether the given block number is valid
-    *  (i.e. inside the configured range)
-    */
-    else if((BlockNumber < MODULE_LOGICAL_START_ADDRESS) || (BlockNumber > MODULE_LOGICAL_END_ADDRESS))
+    /*[SWS_Ea_00148]  If development error detection for the module EA is enabled: the
+      function Ea_Write shall check whether the given block number is valid (i.e. inside
+      the configured range). If this is not the case, the function Ea_Write shall reject the
+      write request, raise the development error EA_E_INVALID_BLOCK_NO and return
+      with E_NOT_OK.  (SRS_BSW_00323)
+     * */
+    else if((Find_Block(BlockNumber)== E_NOT_OK) ||(BlockNumber == 0 )||( BlockNumber == 0xFFFF))
     {
         #if(EA_DEV_ERROR_DETECT == STD_ON)
             Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_WRITE_API_ID, EA_E_INVALID_BLOCK_NO);
         #endif
 
-        return E_NOT_OK ;
+        rtn_val =E_NOT_OK ;
     }
     /*
      * NO Errors Then:
-     * Calculate physical Address
-     * Put Length equal to configured size for this block
      * Copy Parameters to be used in the main function
      */
     else
     {
-       /* Get Block configured size
-        * Each block number depends on the previous preserved virtual pages for the previous blocks
-        * [SWS_Ea_00005]Each configured logical block shall take up an integer multiple of the configured
-        * virtual page size (see also Chapter 10.2.3, configuration parameter EA_VIRTUAL_PAGE_SIZE .
-        * [SWS_Ea_00068]  Logical blocks must not overlap each other and must not be contained
-        *  within one another.  (SRS_MemHwAb_14001)
-        * */
-        for(BlockCount = 0 ;BlockCount <BLOCKS_NUM ; BlockCount++)
-        {
-            if((BlockNumber-MODULE_LOGICAL_START_ADDRESS) == Sum)
-            {
-               /*Get Block size in bytes*/
-                BlockSize = EA_BlocksSize[BlockCount] ;
-               /*Get block ID in the module */
-                ParametersCopy.BlockID = BlockCount ;
-                break;
-            }
-            else
-            {
-              /*Add the number of previous occupied pages */
-               Sum+= EA_BlocksSize[BlockCount] / EA_VIRTUAL_PAGE_SIZE ;
-            }
-        }
 
         /*Save Parameters to be used in the main function*/
-        ParametersCopy.PhysicalStartAddress = CALC_PHSICAL_W_ADD(BlockNumber) ;
-        ParametersCopy.Len        = BlockSize ;
+        ParametersCopy.Len        = Ea_BlockSConfig[ParametersCopy.BlockIndex].BlockSize ;
         ParametersCopy.DataBufPtr =(uint8*) DataBufferPtr ;
-
         /*Set current job to writing*/
         JobProcessing_State = WRITE_JOB ;
 
         /*Set module state to busy*/
         EA_ModuleState = MEMIF_BUSY ;
 
+        /*Reset Job done flag and Error flag*/
+        Eep_JobDone = 0 ;
+        Eep_JobError = 0 ;
+
+        /*Set Internal state*/
+        InternalStates = Write_block ;
+
         /*Set current job result to pending*/
         JobResult = MEMIF_JOB_PENDING ;
     }
-    return E_OK ;
+    return rtn_val ;
+}
+
+/****************************************************************************************/
+/*    Function Name           : Ea_JobEndNotification                                  */
+/*    Function Description    : Requested job ended successfully                        */
+/*    Parameter in            : none                                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : none                                                    */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
+void Ea_JobEndNotification(void)
+{
+    Eep_JobDone = 1;
+}
+
+
+/****************************************************************************************/
+/*    Function Name           : Ea_JobErrorNotification                                 */
+/*    Function Description    : Requested job ended with error                          */
+/*    Parameter in            : none                                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : none                                                    */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
+void Ea_JobErrorNotification(void)
+{
+    Eep_JobError = 1;
 }
 
 /****************************************************************************************/
@@ -508,6 +508,10 @@ void Ea_Cancel(void)
         /*Set current job result to pending*/
         JobResult = MEMIF_JOB_CANCELED ;
 
+        /*Reset Job done flag and Error flag*/
+        Eep_JobDone = 0 ;
+        Eep_JobError = 0 ;
+
         /*call the cancel function of the underlying EEPROM driver*/
         Eep_Cancel();
     }
@@ -555,8 +559,48 @@ MemIf_JobResultType Ea_GetJobResult(void)
 /****************************************************************************************/
 Std_ReturnType Ea_InvalidateBlock(uint16 BlockNumber)
 {
+    Std_ReturnType rtn_val = E_OK ;
 
-    return E_OK ;
+    /*[SWS_Ea_00135]  If development error detection for the module Ea is enabled: the
+      function Ea_InvalidateBlock shall check if the module state is MEMIF_UNINIT.
+      If this is the case, the function Ea_InvalidateBlock shall reject the invalidation
+      request, raise the development error EA_E_UNINIT and return with E_NOT_OK.(SRS_BSW_00323)
+     */
+    if(EA_ModuleState == MEMIF_UNINIT)
+     {
+         #if(EA_DEV_ERROR_DETECT == STD_ON)
+             Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_INVALIDATE_BLOCK_API, EA_E_UNINIT);
+         #endif
+         rtn_val = E_NOT_OK ;
+     }
+    /*[SWS_Ea_00175] The function Ea_InvalidateBlock shall check if the module
+      state is MEMIF_BUSY. If this is the case, the function Ea_InvalidateBlock shall
+      reject the invalidation request, raise the runtime error EA_E_BUSY and return with
+      E_NOT_OK
+       */
+     else if(EA_ModuleState == MEMIF_BUSY)
+     {
+          /*Call DEM module to report runtime error*/
+          rtn_val =E_NOT_OK ;
+      }
+     else
+     {
+         /*Get block index */
+         Find_Block(BlockNumber);
+
+         /*reset job flags*/
+         Eep_JobDone  = 0;
+         Eep_JobError = 0;
+
+         JobResult = MEMIF_JOB_PENDING ;
+
+         /*Set Internal state*/
+         InternalStates = Write_block_Status ;
+         BlockStatus = EA_INCONSISTANT_BLOCK ;
+         EA_ModuleState = MEMIF_BUSY ;
+     }
+
+    return rtn_val ;
 }
 /****************************************************************************************/
 /*    Function Name           : Ea_MainFunction                                         */
@@ -585,11 +629,6 @@ void Ea_MainFunction(void)
                    Ea_MainFunction_Write() ;
                break ;
 
-               /*Current pending job is erase job*/
-               case ERASE_JOB :
-                   Ea_MainFunction_Erase() ;
-               break ;
-
                /*Current pending job is compare job*/
                case INVALIDATE_JOB :
                    Ea_MainFunction_Invalidate();
@@ -598,95 +637,430 @@ void Ea_MainFunction(void)
        }
 }
 
+/****************************************************************************************/
+/*    Function Name           : Ea_MainFunction_Read                                    */
+/*     Function Description    : Service to handle internal processing of a read job    */
+/*    Parameter in            : none                                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : none                                                    */
+/*    Requirment              : none                                                    */
+/*    Notes                   : none                                                    */
+/****************************************************************************************/
 void Ea_MainFunction_Read(void)
 {
-    uint8 return_val = 0 ;
 
-    /* [SWS_Ea_00074]  The function Ea_MainFunction shall check,
-     * whether the block requested for reading has been invalidated by the upper layer module.
-     */
-    if(BlockState[ParametersCopy.BlockID].Validation == INVALID_BLOCK )
+    switch(InternalStates)
     {
-        /* If so, the function Ea_MainFunction shall set the job result to MEMIF_BLOCK_INVALID
-         * and call the job error notification function if configured
-         */
-        JobResult = MEMIF_BLOCK_INVALID ;
-        EaNvmJobErrorNotification();
-    }
+/***********************case :Read_block*******************/
+        case Read_block_status :
+            /* [SWS_Ea_00074]  The function Ea_MainFunction shall check,
+             * whether the block requested for reading has been invalidated by the upper layer module.
+             */
 
-    /* [SWS_Ea_00104]   The function Ea_MainFunction shall check the consistency of the
-     * logical block being read before notifying the caller
-     */
-    else if(BlockState[ParametersCopy.BlockID].Consistency == INCONSISTENT)
-    {
-
-        /* shall set the job result to MEMIF_BLOCK_INCONSISTENT and call the error
-         * notification routine of the upper layer if configured.
-         */
-        JobResult = MEMIF_BLOCK_INCONSISTENT ;
-        EaNvmJobErrorNotification();
-    }
-    else
-    {
-        /*Call Eep_Read if block is valid and consistent*/
-        return_val = Eep_Read(ParametersCopy.PhysicalStartAddress, ParametersCopy.DataBufPtr, ParametersCopy.Len);
-        if(return_val == E_NOT_OK)
-        {
-            JobResult = MEMIF_JOB_FAILED ;
-            EaNvmJobErrorNotification();
-            #if(EA_DEV_ERROR_DETECT == STD_ON)
-                Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_MAINFUNCTION, EA_E_BUSY);
-            #endif
-
-        }
-        else
-        {
-            /*Misra Rule*/
-        }
+             if(ret_val1 == E_PENDING )
+             {
+                 /*Request to read block header*/
+                 ret_val1= Get_BlockStatus(ParametersCopy.BlockIndex, &BlockStatus) ;
+             }
+             else if(ret_val1 == E_OK)
+             {
+                 if(BlockStatus == EA_VALID_BLOCK)
+                 {
+                    InternalStates = Read_block ;
+                    ret_val1 = E_PENDING ;
+                 }
+                /* [SWS_Ea_00104]   The function Ea_MainFunction shall check the consistency of the
+                 * logical block being read before notifying the caller
+                 */
+                 else if(BlockStatus == EA_INCONSISTANT_BLOCK )
+                 {
+                     InternalStates = End_job ;
+                     JobResult = MEMIF_BLOCK_INCONSISTENT ;
+                 }
+                 /*Check if the Block status not Valid*/
+                 /* If so, the function Ea_MainFunction shall set the job result to MEMIF_BLOCK_INVALID
+                  * and call the job error notification function if configured
+                  */
+                 else
+                 {
+                     InternalStates = End_job ;
+                     JobResult = MEMIF_BLOCK_INVALID ;
+                 }
+             }
+             else
+             {
+                 InternalStates = End_job ;
+                 JobResult      = MEMIF_JOB_FAILED ;
+             }
+         break ;
+ /***********************case :Read_block*******************/
+         case Read_block :
+            /*Call Eep_Read if block is valid and consistent*/
+            if(ret_val1 == E_PENDING)
+            {
+                /*Request read job from Eep module*/
+                ret_val1 = RequestEepJob(ParametersCopy.BlockIndex, ParametersCopy.DataBufPtr,JobProcessing_State,ParametersCopy.Len);
+            }
+            else if(ret_val1 == E_NOT_OK)
+            {
+                /*Report job failed if Eep return not OK*/
+                JobResult   = MEMIF_JOB_FAILED ;
+                InternalStates = End_job ;
+            }
+            else
+            {
+                JobResult = MEMIF_JOB_OK ;
+                InternalStates = End_job ;
+            }
+        break ;
+/***********************case :End_job*******************/
+        case End_job :
+            if(JobResult == MEMIF_JOB_OK)
+            {
+                EaNvmJobEndNotification();
+            }
+            else
+            {
+                EaNvmJobErrorNotification();
+            }
+            EA_ModuleState = MEMIF_IDLE ;
+            ret_val1 = E_PENDING ;
+        break;
     }
 }
 
+/****************************************************************************************/
+/*    Function Name           : Ea_MainFunction_Write                                   */
+/*     Function Description   : Service to handle internal processing of a write job    */
+/*    Parameter in            : none                                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : none                                                    */
+/*    Requirement             : none                                                    */
+/*    Notes                   : none                                                    */
+/****************************************************************************************/
 void Ea_MainFunction_Write(void)
 {
-    uint8 return_val = 0 ;
-    /*Call Eep_Write if block is valid and consistent*/
-    return_val = Eep_Write(ParametersCopy.PhysicalStartAddress, ParametersCopy.DataBufPtr, ParametersCopy.Len);
-
-    if(return_val == E_NOT_OK)
+    switch(InternalStates)
     {
+/***********************case :Write_block_Status*******************/
+        case Write_block_Status :
+            if(ret_val1 == E_PENDING)
+            {
+                ret_val1= Set_BlockStatus(ParametersCopy.BlockIndex, &BlockStatus);
+            }
+            else if(ret_val1 == E_OK)
+            {
+                if(BlockStatus == EA_INCONSISTANT_BLOCK)
+                {
+                    InternalStates = Write_block ;
+                    ret_val1 = E_PENDING ;
+                }
+                else
+                {
+                    JobResult = MEMIF_JOB_OK;
+                    InternalStates = End_job ;
+                    ret_val1 = E_PENDING ;
 
-        JobResult = MEMIF_JOB_FAILED ;
-        EaNvmJobErrorNotification();
-        #if(EA_DEV_ERROR_DETECT == STD_ON)
-          Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_MAINFUNCTION, EA_E_BUSY);
-        #endif
-    }
-    else
-    {
-      /*Misra Rule*/
+                }
+            }
+            else
+            {
+                JobResult = MEMIF_JOB_FAILED ;
+                InternalStates = End_job ;
+                ret_val1 = E_PENDING ;
+            }
+        break;
+/***********************case :Write_block*******************/
+        case Write_block :
+            if(ret_val1 == E_PENDING)
+               {
+                /*Request write job from Eep module*/
+                ret_val1 = RequestEepJob(ParametersCopy.BlockIndex, ParametersCopy.DataBufPtr,JobProcessing_State,ParametersCopy.Len);
+               }
+               else if(ret_val1 == E_OK)
+               {
+                   InternalStates = Write_block_Status ;
+                   BlockStatus = EA_VALID_BLOCK ;
+                   ret_val1 = E_PENDING ;
+               }
+               else
+               {
+                   JobResult = MEMIF_JOB_FAILED ;
+                   InternalStates = End_job ;
+                   ret_val1 = E_PENDING ;
+               }
+        break;
+/***********************case :End_job*******************/
+        case End_job :
+            if(JobResult == MEMIF_JOB_OK)
+            {
+                EaNvmJobEndNotification();
+            }
+            else
+            {
+                EaNvmJobErrorNotification();
+            }
+            EA_ModuleState = MEMIF_IDLE ;
+            ret_val1 = E_PENDING ;
+        break;
     }
 }
 
-void Ea_MainFunction_Erase(void)
-{
-    uint8 return_val = 0 ;
-    /*Call Eep_Erase if block is valid and consistent*/
-    return_val = Eep_Erase(ParametersCopy.PhysicalStartAddress, ParametersCopy.Len);
-    if(return_val == E_NOT_OK)
-    {
-        JobResult = MEMIF_JOB_FAILED ;
-        EaNvmJobErrorNotification();
-        #if(EA_DEV_ERROR_DETECT == STD_ON)
-          Det_ReportError(EA_MODULE_ID, EA_0_INSTANCE_ID, EA_MAINFUNCTION, EA_E_BUSY);
-        #endif
-    }
-    else
-    {
-      /*Misra Rule*/
-    }
-
-}
-
+/****************************************************************************************/
+/*    Function Name           : Ea_MainFunction_Invalidate                              */
+/*     Function Description   : Internal processing for Invalidate block request        */
+/*    Parameter in            : BlockNum                                                */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : none                                                    */
+/*    Requirment              : none                                                    */
+/*    Notes                   : none                                                    */
+/****************************************************************************************/
 void Ea_MainFunction_Invalidate(void)
 {
+    switch(InternalStates)
+    {
+        case Write_block_Status :
+            if(ret_val1 == E_PENDING)
+           {
+               BlockStatus = EA_INVALID_BLOCk ;
+               ret_val1= Set_BlockStatus(ParametersCopy.BlockIndex, &BlockStatus);
+           }
+           else if(ret_val1 == E_OK)
+           {
+               JobResult = MEMIF_JOB_OK;
+               InternalStates = End_job ;
+               ret_val1 = E_PENDING ;
+           }
+           else
+           {
+               JobResult = MEMIF_JOB_FAILED ;
+               InternalStates = End_job ;
+               ret_val1 = E_PENDING ;
+           }
+        break;
+        case End_job :
+            if(JobResult == MEMIF_JOB_OK)
+           {
+               EaNvmJobEndNotification();
+           }
+           else
+           {
+               EaNvmJobErrorNotification();
+           }
+           EA_ModuleState = MEMIF_IDLE ;
+           ret_val1 = E_PENDING ;
+        break;
+    }
+
+}
+
+
+/****************************************************************************************/
+/*    Function Name           : Find_Block                                              */
+/*     Function Description   : Search configured blocks                                */
+/*    Parameter in            : BlockNum                                                */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : none                                                    */
+/*    Requirment              : none                                                    */
+/*    Notes                   : none                                                    */
+/****************************************************************************************/
+static Std_ReturnType Find_Block(uint16 BlockNum )
+{
+    uint16 counter = 0 ;
+    Std_ReturnType rtn_val = E_NOT_OK ;
+
+    for(counter =0 ;counter < EA_BLOCKS_NUM ;counter ++)
+    {
+        if(Ea_BlockSConfig[counter].BlockNumber == BlockNum)
+        {
+            rtn_val = E_OK ;
+            ParametersCopy.BlockIndex = counter ;
+            break;
+        }
+    }
+    return rtn_val ;
+  }
+
+/****************************************************************************************/
+/*    Function Name           : Find_Block                                              */
+/*     Function Description   : Search configured blocks                                */
+/*    Parameter in            : BlockNum                                                */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : none                                                    */
+/*    Requirment              : none                                                    */
+/*    Notes                   : none                                                    */
+/****************************************************************************************/
+static Std_ReturnType Find_Blocksize(uint16 BlockNum,uint16* Blocksize)
+{
+    uint16 counter = 0 ;
+    Std_ReturnType rtn_val = E_NOT_OK ;
+
+    for(counter =0 ;counter < EA_BLOCKS_NUM ;counter ++)
+    {
+        if(Ea_BlockSConfig[counter].BlockNumber == BlockNum)
+        {
+            rtn_val = E_OK ;
+            *Blocksize = Ea_BlockSConfig[counter].BlockSize ;
+            break;
+        }
+    }
+    return rtn_val ;
+  }
+
+/****************************************************************************************/
+/*    Function Name           : Set_BlockStatus                                         */
+/*     Function Description   : service to write block header                           */
+/*    Parameter in            : BlockIndex  , Status                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : Std_ReturnType                                          */
+/*    Requirment              : none                                                    */
+/*    Notes                   : none                                                    */
+/****************************************************************************************/
+static Std_ReturnType Set_BlockStatus(uint16 BlockIndex , uint32* Status)
+{
+    Std_ReturnType rtn_val = E_PENDING;
+    uint32 BlockAdrs = 0 ;
+
+    if(Eep_GetStatus()!= MEMIF_BUSY && Eep_JobDone != 1)
+    {
+        /*Reset Job done flag and Error flag*/
+        Eep_JobDone = 0 ;
+        Eep_JobError = 0 ;
+
+        /*Request Write job*/
+        BlockAdrs = Ea_BlockSConfig[BlockIndex].PhysicalStartAddress ;
+        Eep_Write(BlockAdrs,(uint8*)Status, EA_BLOCK_HEADER_SIZE) ;
+    }
+    else
+    {
+        /*Do nothing if underlying module busy*/
+    }
+
+    /*Check if requested job done OK*/
+    if(Eep_JobDone)
+    {
+        /*Reset Job done flag */
+        Eep_JobDone  = 0;
+        rtn_val = E_OK ;
+    }
+
+    /*Check if error occurred */
+    if(Eep_JobError)
+    {
+        /*Reset Error flag*/
+        Eep_JobError = 0;
+        rtn_val = E_NOT_OK ;
+    }
+    return rtn_val ;
+}
+
+/****************************************************************************************/
+/*    Function Name           : Get_BlockStatus                                         */
+/*     Function Description   : service to write block header                           */
+/*    Parameter in            : BlockIndex  , Status                                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : Std_ReturnType                                          */
+/*    Requirment              : none                                                    */
+/*    Notes                   : none                                                    */
+/****************************************************************************************/
+static Std_ReturnType Get_BlockStatus(uint16 BlockIndex , uint32* Status)
+{
+    Std_ReturnType rtn_val = E_PENDING;
+    uint32 BlockAdrs = 0 ;
+
+    if(Eep_GetStatus()!= MEMIF_BUSY && Eep_JobDone != 1)
+    {
+        /*Reset Job done flag and Error flag*/
+        Eep_JobDone = 0 ;
+        Eep_JobError = 0 ;
+
+        /*Request Write job*/
+        BlockAdrs = Ea_BlockSConfig[BlockIndex].PhysicalStartAddress ;
+        Eep_Read(BlockAdrs,(uint8*)Status, EA_BLOCK_HEADER_SIZE) ;
+    }
+    else
+    {
+        /*Do nothing if underlying module busy*/
+    }
+
+    /*Check if requested job done OK*/
+    if(Eep_JobDone)
+    {
+        /*Reset Job done flag */
+        Eep_JobDone  = 0;
+        rtn_val = E_OK ;
+    }
+
+    /*Check if error occurred */
+    if(Eep_JobError)
+    {
+        /*Reset Error flag*/
+        Eep_JobError = 0;
+        rtn_val = E_NOT_OK ;
+    }
+    return rtn_val ;
+}
+
+/****************************************************************************************/
+/*    Function Name           : RequestEepJob                                           */
+/*     Function Description   : service to write or read a block                        */
+/*    Parameter in            : BlockIndex  , DataPtr ,JobReq , Len                     */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : Std_ReturnType                                          */
+/*    Requirment              : none                                                    */
+/*    Notes                   : none                                                    */
+/****************************************************************************************/
+static Std_ReturnType RequestEepJob(uint16 BlockIndex , uint8* DataPtr, uint8 JobReq,uint16 Len)
+{
+    Std_ReturnType rtn_val = E_PENDING;
+    uint32 BlockAdrs = 0 ;
+
+    if(Eep_GetStatus()!= MEMIF_BUSY && Eep_JobDone != 1)
+    {
+        /*Reset Job done flag and Error flag*/
+        Eep_JobDone = 0 ;
+        Eep_JobError = 0 ;
+
+        /*Request  job*/
+        BlockAdrs = Ea_BlockSConfig[BlockIndex].PhysicalStartAddress ;
+        if(JobReq == READ_JOB)
+        {
+            Eep_Read(BlockAdrs,DataPtr, Len) ;
+        }
+        else if(JobReq == WRITE_JOB)
+        {
+            Eep_Write(BlockAdrs,DataPtr, Len) ;
+        }
+        else
+        {}
+    }
+    else
+    {
+        /*Do nothing if underlying module busy*/
+    }
+
+    /*Check if requested job done OK*/
+    if(Eep_JobDone)
+    {
+        /*Reset Job done flag */
+        Eep_JobDone  = 0;
+        rtn_val = E_OK ;
+    }
+
+    /*Check if error occurred */
+    if(Eep_JobError)
+    {
+        /*Reset Error flag*/
+        Eep_JobError = 0;
+        rtn_val = E_NOT_OK ;
+    }
+    return rtn_val ;
 }

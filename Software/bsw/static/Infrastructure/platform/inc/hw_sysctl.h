@@ -609,12 +609,14 @@
                                 0x00370000  // TM4C129XKCZAD
 #define SYSCTL_DID1_PRTNO_TM4C129XNCZAD                                       \
                                 0x00320000  // TM4C129XNCZAD
+/*
 #define SYSCTL_DID1_P../incNT_M    0x0000E000  // Package Pin Count
 #define SYSCTL_DID1_P../incNT_100  0x00004000  // 100-pin LQFP package
 #define SYSCTL_DID1_P../incNT_64   0x00006000  // 64-pin LQFP package
 #define SYSCTL_DID1_P../incNT_144  0x00008000  // 144-pin LQFP package
 #define SYSCTL_DID1_P../incNT_157  0x0000A000  // 157-pin BGA package
 #define SYSCTL_DID1_P../incNT_128  0x0000C000  // 128-pin TQFP package
+*/
 #define SYSCTL_DID1_TEMP_M      0x000000E0  // Temperature Range
 #define SYSCTL_DID1_TEMP_C      0x00000000  // Commercial temperature range
 #define SYSCTL_DID1_TEMP_I      0x00000020  // Industrial temperature range

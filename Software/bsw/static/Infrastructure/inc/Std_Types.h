@@ -60,8 +60,9 @@ typedef struct {
 
 
 typedef uint8 Std_ReturnType;
-#define E_OK 					(Std_ReturnType)0
-#define E_NOT_OK 				(Std_ReturnType)1
+#define E_OK                    ((Std_ReturnType)0U)
+#define E_NOT_OK                ((Std_ReturnType)1U)
+#define E_PENDING               ((Std_ReturnType)2U)
 
 
 #define STD_HIGH		0x01

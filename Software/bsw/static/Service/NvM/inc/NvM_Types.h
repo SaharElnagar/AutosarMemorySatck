@@ -2,33 +2,67 @@
  * NvM_Types.h
  *
  *
- *      Author: Sahar
+ *      Author: Sahar Elnagar
  */
 
 #ifndef BSW_STATIC_SERVICE_NVM_TYPES_H_
 #define BSW_STATIC_SERVICE_NVM_TYPES_H_
 
 #include "Std_Types.h"
+                /*****************************************************************************************/
+                /*                   Implementation Data Types                                           */
+                /*****************************************************************************************/
 typedef uint8 NvMBlockCrcType ;
-#define NVM_CRC16       ((NvMBlockCrcType)0U)
-#define NVM_CRC32       ((NvMBlockCrcType)1U)
-#define NVM_CRC8        ((NvMBlockCrcType)2U)
+#define NVM_CRC16                   ((NvMBlockCrcType)0U)
+#define NVM_CRC32                   ((NvMBlockCrcType)1U)
+#define NVM_CRC8                    ((NvMBlockCrcType)2U)
 
-typedef uint8 NvMBlockManagementType
-#define NVM_BLOCK_DATASET   ((NvMBlockManagementType)0U)
-#define NVM_BLOCK_NATIVE    ((NvMBlockManagementType)1U)
-#define NVM_BLOCK_REDUNDANT ((NvMBlockManagementType)2U)
+typedef uint8 NvMBlockManagementType ;
+#define NVM_BLOCK_DATASET           ((NvMBlockManagementType)0U)
+#define NVM_BLOCK_NATIVE            ((NvMBlockManagementType)1U)
+#define NVM_BLOCK_REDUNDANT         ((NvMBlockManagementType)2U)
 
+/*[SWS_NvM_00470]
+  This is an asynchronous request result returned by the API service NvM_GetErrorStatus.
+  The availability of an asynchronous request result can be additionally signaled via a callback function.
+ */
+typedef uint8 NvM_RequestResultType ;
+#define NVM_REQ_OK                  ((NvM_RequestResultType)0U)
+#define NVM_REQ_NOT_OK              ((NvM_RequestResultType)1U)
+#define NVM_REQ_PENDING             ((NvM_RequestResultType)2U)
+#define NVM_REQ_INTEGRITY_FAILED    ((NvM_RequestResultType)3U)
+#define NVM_REQ_BLOCK_SKIPPED       ((NvM_RequestResultType)4U)
+#define NVM_REQ_NV_INVALIDATED      ((NvM_RequestResultType)5U)
+#define NVM_REQ_CANCELED            ((NvM_RequestResultType)6U)
+#define NVM_REQ_RESTORED_FROM_ROM   ((NvM_RequestResultType)8U)
 
+/*[SWS_NvM_00471]
+  Identification of a NVRAM block via a unique block identifier.
+  Reserved NVRAM block IDs: 0 -> to derive multi block request results via NvM_GetErrorStatus
+                            1 -> redundant NVRAM block which holds the configuration ID
+ */
+typedef uint16 NvM_BlockIdType ;
+
+/* Since this type is used for compliance purposes only
+ * (meaning that NvM_Init will now have a pointer to this type as parameter, based on SWS_BSW_00047)
+ * it will be left to the developer to chose how to implement it, considering it has no use for the
+ * NvM module in any way
+ */
+typedef void NvM_ConfigType ;
+
+/*[SWS_NvM_00848]*/
+typedef const void* ConstVoidPtr;
 
 typedef struct
 {
+    uint8 bla;
    // NvMEaRefType*NvMEaRef ;
    // NvMFeeRefTYpe*NvMFeeRef ;
 }NvMTargetBlockReferenceType ;
+
 /*****************************************************************************************/
 /* ECUC_NvM_00061 :  NvMBlockDescriptor
-/* Container for a management structure to configure the composition of a given
+ * Container for a management structure to configure the composition of a given
  * NVRAM Block Management Type. Its multiplicity describes the number of configured
  * NVRAM blocks, one block is required to be configured. The NVRAM block descriptors
  *  are condensed in the NVRAM block descriptor table.
@@ -157,12 +191,12 @@ typedef struct
      If this is not configured, no permanent RAM data block is
      available for the selected block management type.
      */
-    uint32*                 NvMRamBlockDataAddress  ;
+    uint8*                 NvMRamBlockDataAddress  ;
 
-    /*ECUC_NvM_00521
-      Defines the start address of the RAM block data.
-      If this is not configured, no permanent RAM data block is available for the selected block management type.
-      */
+    /* ECUC_NvM_00521
+     * Entry address of a block specific callback routine which shall be called in order
+     * to let the application copy data from the NvM module's mirror to RAM block.
+     */
     Std_ReturnType (* NvMReadRamBlockFromNvCallback)(const void* NvMBuffer) ;
 
     /*
@@ -179,7 +213,7 @@ typedef struct
       Defines the start address of the ROM block data.
       If not configured, no ROM block is available for the selected block management type.
      */
-    uint32                  NvMRomBlockDataAddress   ;
+    uint8*                  NvMRomBlockDataAddress   ;
 
     /*ECUC_NvM_00485
      Defines the number of multiple ROM blocks in a contiguous area according to the given block management type.
