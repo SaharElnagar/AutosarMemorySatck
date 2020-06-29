@@ -90,7 +90,7 @@
 /*******************************************************************************/
 // Published information
 /*******************************************************************************/
-
+#define EepAllowedWriteCycles      (500000) 
 #define EepEraseUnitSize           EEP_SIZE            /*Mass Erase only*/
 #define EepEraseValue              0xFFFFFFFF          /*Value of an erased EEPROM cell.*/
 #define EepMinimumAddressType      (16U)               /*Minimum expected size of Eep_AddressType, 16 bits */
