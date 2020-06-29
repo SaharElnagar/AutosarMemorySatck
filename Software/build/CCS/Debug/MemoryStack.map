@@ -1,7 +1,7 @@
 ******************************************************************************
                   TI ARM Linker PC v18.12.2                    
 ******************************************************************************
->> Linked Mon Jun 29 20:00:28 2020
+>> Linked Mon Jun 29 23:34:17 2020
 
 OUTPUT FILE NAME:   <MemoryStack.out>
 ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 000026b1
@@ -106,7 +106,7 @@ MODULE SUMMARY
     +--+------------------------------+------+---------+---------+
        Total:                         0      0         8      
                                                               
-    .\bsw\static\Interface\Fee\src\
+    .\bsw\static\Interface\FEE\src\
        Fee.obj                        4312   0         443    
        Fee_Sector.obj                 2308   0         84     
        Fee_PrivateCfg.obj             0      0         120    
