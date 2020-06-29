@@ -10,4 +10,4 @@ Implemented the following modules  in AUTOSAR  Release 4.3.1  :
 -----------------------------------
 Platform :Tiva C (TM4C123GH6PM) microcontroller
 
-Authors : Sahar Elnagr , Yomna Mokhtar
+Authors : Sahar Elnagar , Yomna Mokhtar
