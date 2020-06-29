@@ -201,7 +201,16 @@ static MemIf_JobResultType JobResult = MEMIF_JOB_OK;
 
 static Eep_ConfigType* Global_Config = NULL_PTR ;
 
-
+/****************************************************************************************/
+/*    Function Name           : Eep_Init                                                */
+/*    Function Description    : Initializes the module                                  */
+/*    Parameter in            : const Ea_ConfigType* ConfigPtr                          */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : none                                                    */
+/*    Requirment              : SWS_Eep_00143                                           */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
 void Eep_Init( const Eep_ConfigType* ConfigPtr )
 {
     uint32 Status;
@@ -278,7 +287,16 @@ void Eep_Init( const Eep_ConfigType* ConfigPtr )
 
 }
 
-
+/****************************************************************************************/
+/*    Function Name           : Eep_Read                                                */
+/*    Function Description    : Request Read job from EEPROM                            */
+/*    Parameter in            : EepromAddress , Length                                  */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : DataBufferPtr                                           */
+/*    Return value            : none                                                    */
+/*    Requirment              : SWS_Eep_00145                                           */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
 Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_LengthType Length )
 {
     /*
@@ -359,7 +377,16 @@ Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_L
         return E_OK;
 }
 
-
+/****************************************************************************************/
+/*    Function Name           : Eep_Write                                               */
+/*    Function Description    : Request Write job from EEPROM                           */
+/*    Parameter in            : EepromAddress.DataBufferPtr , Length                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : DataBufferPtr                                           */
+/*    Return value            : none                                                    */
+/*    Requirment              : SWS_Eep_00146                                           */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
 Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferPtr,Eep_LengthType Length )
 {
    /*
@@ -437,6 +464,16 @@ Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferP
        return E_OK;
 }
 
+/****************************************************************************************/
+/*    Function Name           : Eep_Erase                                               */
+/*    Function Description    : Request  EEPROM erase                                   */
+/*    Parameter in            : EepromAddress.DataBufferPtr , Length                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : DataBufferPtr                                           */
+/*    Return value            : none                                                    */
+/*    Requirment              : SWS_Eep_00147                                           */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
 Std_ReturnType Eep_Erase(Eep_AddressType EepromAddress,Eep_LengthType Length )
 {
       /*
@@ -504,6 +541,16 @@ Std_ReturnType Eep_Erase(Eep_AddressType EepromAddress,Eep_LengthType Length )
           return E_OK;
 }
 
+/****************************************************************************************/
+/*    Function Name           : Eep_Compare                                             */
+/*    Function Description    : Request  compare job                                    */
+/*    Parameter in            : EepromAddress.DataBufferPtr , Length                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : DataBufferPtr                                           */
+/*    Return value            : none                                                    */
+/*    Requirment              : SWS_Eep_00148                                           */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
 Std_ReturnType Eep_Compare(Eep_AddressType EepromAddress,const uint8* DataBufferPtr,Eep_LengthType Length )
 {
     /*

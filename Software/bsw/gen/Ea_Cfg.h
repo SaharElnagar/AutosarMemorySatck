@@ -82,7 +82,7 @@
 
 /*Size of a logical block in bytes. */
 #define  EA_BLOCK_0_SIZE                        (32U)
-#define  EA_BLOCK_1_SIZE                        (15U)
+#define  EA_BLOCK_1_SIZE                        (16U)
 
 
 /*  Marker for high priority data. true: Block contains immediate data.

@@ -5,44 +5,43 @@
  */
 #include "Det.h"
 #include "sysctl.h"
-#include "Eep.h"
+#include "Ea.h"
 
 void Set_SystemClock(void);
 
 extern Eep_ConfigType Eep_Config ;
+
+uint8 pData[50];
+uint8 pRead[50];
+
+void WriteBlock(uint8 val)
+{
+    uint8 count = 0;
+    for(count =0 ; count <50;count++)
+    {
+        pData[count] = val;
+    }
+}
+
 int main(void)
 {
-    uint32 pui32Data[4];
-    uint32 pui32Read[4];
 
-    pui32Data[0] = 0x00000001;
-    pui32Data[1] = 0x00000002;
-    pui32Data[2] = 3 ;
-    pui32Data[3] = 4 ;
     Set_SystemClock();
     Eep_Init(&Eep_Config) ;
-    /*Eep_Erase(0, EepEraseUnitSize);
-    Eep_MainFunction();
-       while(Eep_GetStatus()== MEMIF_BUSY)
-       {
-
-       }*/
-    Eep_Read(8,(uint8*) pui32Read, sizeof(pui32Read));
-
-    while(Eep_GetStatus()== MEMIF_BUSY)
+    Ea_Init(NULL);
+    WriteBlock(5);
+    Ea_Write(EA_BLOCK_1_NUMBER, pData);
+    while(Ea_GetStatus()== MEMIF_BUSY)
     {
-        Eep_MainFunction();
-    }
-    Eep_Write(0, (uint8*)pui32Data, sizeof(pui32Data));
-
-    while(Eep_GetStatus()== MEMIF_BUSY)
-   {
        Eep_MainFunction();
-   }
-    Eep_Read(0, (uint8*)pui32Read, sizeof(pui32Read));
-    while(Eep_GetStatus()== MEMIF_BUSY)
+       Ea_MainFunction() ;
+    }
+
+    Ea_Read(EA_BLOCK_1_NUMBER, 0, pRead, EA_BLOCK_1_SIZE);
+    while(Ea_GetStatus()== MEMIF_BUSY)
        {
            Eep_MainFunction();
+           Ea_MainFunction();
        }
     while(1)
     {

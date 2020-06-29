@@ -74,4 +74,12 @@ typedef struct
 {
 
 } Ea_ConfigType;
+
+void Ea_Init(const Ea_ConfigType* ConfigPtr );
+Std_ReturnType Ea_Read(uint16 BlockNumber,uint16 BlockOffset,uint8* DataBufferPtr, uint16 Length ) ;
+Std_ReturnType Ea_Write( uint16 BlockNumber,const uint8* DataBufferPtr ) ;
+MemIf_StatusType Ea_GetStatus(void) ;
+MemIf_JobResultType Ea_GetJobResult(void);
+Std_ReturnType Ea_InvalidateBlock(uint16 BlockNumber);
+void Ea_MainFunction(void) ;
 #endif

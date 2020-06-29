@@ -14,10 +14,13 @@ main.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/machine
 main.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/machine/_stdint.h
 main.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/sys/_stdint.h
 main.obj: C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/stdbool.h
+main.obj: R:/MyAutosar/MemoryStack/Software/bsw/static/Interface/EA/inc/Ea.h
 main.obj: R:/MyAutosar/MemoryStack/Software/bsw/static/Mcal/Eep/inc/Eep.h
 main.obj: R:/MyAutosar/MemoryStack/Software/bsw/gen/Eep_Cfg.h
 main.obj: R:/MyAutosar/MemoryStack/Software/bsw/static/Infrastructure/inc/MemIf_Types.h
 main.obj: R:/MyAutosar/MemoryStack/Software/bsw/static/Mcal/Eep/inc/Eep_Types.h
+main.obj: R:/MyAutosar/MemoryStack/Software/bsw/gen/Ea_Cfg.h
+main.obj: R:/MyAutosar/MemoryStack/Software/bsw/stub/stub.h
 
 ../main.c: 
 R:/MyAutosar/MemoryStack/Software/bsw/stub/Det.h: 
@@ -33,7 +36,10 @@ C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/machine/_types.h:
 C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/machine/_stdint.h: 
 C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/sys/_stdint.h: 
 C:/ti/ccs910/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include/stdbool.h: 
+R:/MyAutosar/MemoryStack/Software/bsw/static/Interface/EA/inc/Ea.h: 
 R:/MyAutosar/MemoryStack/Software/bsw/static/Mcal/Eep/inc/Eep.h: 
 R:/MyAutosar/MemoryStack/Software/bsw/gen/Eep_Cfg.h: 
 R:/MyAutosar/MemoryStack/Software/bsw/static/Infrastructure/inc/MemIf_Types.h: 
 R:/MyAutosar/MemoryStack/Software/bsw/static/Mcal/Eep/inc/Eep_Types.h: 
+R:/MyAutosar/MemoryStack/Software/bsw/gen/Ea_Cfg.h: 
+R:/MyAutosar/MemoryStack/Software/bsw/stub/stub.h: 
