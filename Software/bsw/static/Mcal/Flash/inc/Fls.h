@@ -18,25 +18,29 @@
 #include "Std_Types.h"
 #include "FlsCfg.h"
 
+
+
+
+#define FLS_SPECIFIED_ERASE_CYCLES          (100000)
 /*******************************************************************************/
 //			Development Errors' IDs
 /*******************************************************************************/
-#define FLS_E_PARAM_CONFIG 		 		0x01
-#define FLS_E_PARAM_ADDRESS 	 		0x02
-#define FLS_E_PARAM_LENGTH  	 		0x03
-#define FLS_E_PARAM_DATA			 		0x04
-#define FLS_E_UNINIT 					 		0x05
-#define FLS_E_BUSY 						 		0x06
-#define FLS_E_PARAM_POINTER 	 		0x0a
+#define FLS_E_PARAM_CONFIG 		 		    0x01
+#define FLS_E_PARAM_ADDRESS 	 		    0x02
+#define FLS_E_PARAM_LENGTH  	 		    0x03
+#define FLS_E_PARAM_DATA			 	    0x04
+#define FLS_E_UNINIT 					    0x05
+#define FLS_E_BUSY 						    0x06
+#define FLS_E_PARAM_POINTER 	 		    0x0a
 
 /*******************************************************************************/
 //			Transient Faults' IDs
 /*******************************************************************************/
 #define FLS_E_ERASE_FAILED				0x01
 #define FLS_E_WRITE_FAILED				0x02
-#define FLS_E_READ_FAILED					0x03
+#define FLS_E_READ_FAILED				0x03
 #define FLS_E_COMPARE_FAILED			0x04
-#define FLS_E_UNEXPECTED_FLASH_ID	0x05
+#define FLS_E_UNEXPECTED_FLASH_ID	    0x05
 
 /*******************************************************************************/
 //			Runtime Errors' IDs
@@ -59,16 +63,16 @@
 //			Flash APIs IDs
 /*******************************************************************************/
 #define FLS_ERASE_API_ID     	  	0x01
-#define FLS_WRITE_API_ID		 	  	0x02
-#define FLS_CANCEL_API_ID		 	  	0x03
+#define FLS_WRITE_API_ID		 	0x02
+#define FLS_CANCEL_API_ID		 	0x03
 #define FLS_GETSTATUS_API_ID	  	0x04
 #define FLS_GETJOBRESULT_API_ID 	0x05
-#define FLS_MAIN_API_ID						0x06
-#define FLS_READ_API_ID						0x07
-#define FLS_COMPARE_API_ID				0x08
-#define FLS_SETMODE_API_ID				0x09
+#define FLS_MAIN_API_ID				0x06
+#define FLS_READ_API_ID				0x07
+#define FLS_COMPARE_API_ID			0x08
+#define FLS_SETMODE_API_ID			0x09
 #define FLS_GETVERSIONINFO_API_ID	0x10
-#define FLS_BLANKCHECK_API_ID			0x0a
+#define FLS_BLANKCHECK_API_ID		0x0a
 
 
 /*******************************************************************************/
@@ -93,20 +97,10 @@ typedef uint8 JOB_PENDING_TYPE;
 //  Container for runtime configuration parameters of the FLASH driver.
 //   Implementation Type: Fls_ConfigType.
 /*******************************************************************************/
-typedef struct{
-	
-	uint32 *FlsAcErase;		//RAM Address offset to which the erase flash access code shall be loaded
-	uint32 *FlsAcWrite;		//RAM Address offset to which the write flash access code shall be loaded
-	float32 FlsCallCycle;	//Cycle time of calls of the flash driver's main function (in seconds)
-	MemIf_ModeType FlsDefaultMode;		// default Flash device mode after initialization
+typedef struct
+{
 	void (*FlsJobEndNotification)(void);
 	void (*FlsJobErrorNotification)(void);
-	uint32 FlsMaxReadFastMode;
-	uint32 FlsMaxReadNormalMode;
-	uint32 FlsMaxWriteFastMode;
-	uint32 FlsMaxWriteNormalMode;
-	uint32 FlsProtection;
-	
 }Fls_ConfigType;
 	
 

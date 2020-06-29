@@ -286,6 +286,7 @@ static uint32 WordCounter = 0;
         break;
         case FLS_END_JOB :
             /*Set end jobs flags*/
+            WordCounter = 0;
             Job_Result = MEMIF_JOB_OK ;
             Module_Status = MEMIF_IDLE ;
             Fls_ConfigPtr->FlsJobEndNotification();
@@ -851,7 +852,7 @@ void Fls_SetMode( MemIf_ModeType Mode ){
 						return;
 				}
 		#endif
-		Fls_ConfigPtr->FlsDefaultMode = Mode;
+
 
 }
 #endif
@@ -949,45 +950,30 @@ void Fls_MainFunction( void ){
 				}
 		#endif
 	
-		if(Job_Result == MEMIF_JOB_PENDING){
-			
-			Module_Status = MEMIF_BUSY;
-			// Clear the flash access and error interrupts.  
-			HWREG(FLASH_FCMISC) = (FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC 
-														| FLASH_FCMISC_INVDMISC | FLASH_FCMISC_PROGMISC);
-			
-			switch (Fls_PENDING_JOB){
-				case WRITE_JOB:
-					Fls_Write_AC();
-				break;
-				
-				case ERASE_JOB :
-					Fls_Erase_AC();
-				break;
-				
-				case READ_JOB :
-					Fls_Read_AC();
-				break;
-				
-				case COMPARE_JOB :
-					Fls_Compare_AC();
-				break;
-				
-				#if (FlsBlankCheckApi == STD_ON)
-				case VERIFICATION_JOB :
-					Fls_BlankCheck_AC();
-				break;
-				#endif
-			}
-			
-			if(Job_Result == MEMIF_JOB_PENDING){
-				Job_Result = MEMIF_JOB_OK;
-			}
-			
-			Module_Status = MEMIF_IDLE;
-			Fls_PENDING_JOB = NO_JOB;
-			
-	}
+        switch (Fls_PENDING_JOB)
+        {
+            case WRITE_JOB:
+                Fls_Write_AC();
+            break;
+
+            case ERASE_JOB :
+                Fls_Erase_AC();
+            break;
+
+            case READ_JOB :
+                Fls_Read_AC();
+            break;
+
+            case COMPARE_JOB :
+                Fls_Compare_AC();
+            break;
+
+            #if (FlsBlankCheckApi == STD_ON)
+            case VERIFICATION_JOB :
+                Fls_BlankCheck_AC();
+            break;
+            #endif
+        }
 }
 
 

@@ -52,11 +52,11 @@
 //*****************************************************************************
 //  Flash base address
 //*****************************************************************************
-#define FLASH_BASE_ADDRESS              0x000000
+#define FLASH_BASE_ADDRESS              0x030000
 //*****************************************************************************
 //  Flash Size
 //*****************************************************************************
-#define FLASH_SIZE                      0x2000
+#define FLASH_SIZE                      0x2000          /*used space for blocks allocation in flash = 64KB*/
 #define ERASED_HALF_WORD                0xFFFF
 #define ERASED_WORD                     0xFFFFFFFF
 //*****************************************************************************
@@ -103,7 +103,7 @@
 //*****************************************************************************
 #define VIRTUAL_SECTOR_NUMBER                       (FLASH_SIZE / VIRTUAL_SECTOR_SIZE)
 
-#define ERASE_PROGRAM_CYCLES                        (1000U)
+#define ERASE_PROGRAM_CYCLES                        FLS_SPECIFIED_ERASE_CYCLES
 
 #define SECTOR_MAX_ERASE_CYCLES                     (ERASE_PROGRAM_CYCLES*NUM_OF_PHYSICAL_SECTORS*VIRTUAL_SECTOR_NUMBER)
 //*****************************************************************************

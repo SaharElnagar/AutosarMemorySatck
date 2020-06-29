@@ -300,7 +300,7 @@ Std_ReturnType FindActiveSector(void)
                 rtn_val1 = E_PENDING ;
             }
         }
-        if(SectorStartAddress == (VIRTUAL_SECTOR_NUMBER*VIRTUAL_SECTOR_SIZE))
+        if(SectorStartAddress == (FLASH_BASE_ADDRESS+(VIRTUAL_SECTOR_NUMBER*VIRTUAL_SECTOR_SIZE)))
         {
             rtn_val2 = E_NOT_OK ;
         }

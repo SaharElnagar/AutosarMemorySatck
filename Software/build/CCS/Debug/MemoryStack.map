@@ -1,29 +1,32 @@
 ******************************************************************************
                   TI ARM Linker PC v18.12.2                    
 ******************************************************************************
->> Linked Mon Jun 29 04:37:22 2020
+>> Linked Mon Jun 29 20:00:28 2020
 
 OUTPUT FILE NAME:   <MemoryStack.out>
-ENTRY POINT SYMBOL: "_c_int00_noinit_noargs"  address: 0000026d
+ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 000026b1
 
 
 MEMORY CONFIGURATION
 
          name            origin    length      used     unused   attr    fill
 ----------------------  --------  ---------  --------  --------  ----  --------
-  FLASH                 00000000   00040000  000002b0  0003fd50  R  X
-  SRAM                  20000000   00008000  00000200  00007e00  RW X
+  FLASH                 00000000   00040000  000027b2  0003d84e  R  X
+  SRAM                  20000000   00008000  0000053f  00007ac1  RW X
 
 
 SEGMENT ALLOCATION MAP
 
 run origin  load origin   length   init length attrs members
 ----------  ----------- ---------- ----------- ----- -------
-00000000    00000000    000002b0   000002b0    r-x
+00000000    00000000    000027b8   000027b8    r-x
   00000000    00000000    0000026c   0000026c    r-- .intvecs
-  0000026c    0000026c    00000044   00000044    r-x .text
-20000000    20000000    00000200   00000000    rw-
+  0000026c    0000026c    000024b6   000024b6    r-x .text
+  00002728    00002728    00000090   00000090    r-- .cinit
+20000000    20000000    0000053f   00000000    rw-
   20000000    20000000    00000200   00000000    rw- .stack
+  20000200    20000200    000001dc   00000000    rw- .data
+  200003dc    200003dc    00000163   00000000    rw- .bss
 
 
 SECTION ALLOCATION MAP
@@ -34,17 +37,55 @@ section   page    origin      length       input sections
 .intvecs   0    00000000    0000026c     
                   00000000    0000026c     tm4c123gh6pm_startup_ccs.obj (.intvecs)
 
-.text      0    0000026c    00000044     
-                  0000026c    0000002c     rtsv7M4_T_le_v4SPD16_eabi.lib : boot_cortex_m.c.obj (.text:_c_int00_noinit_noargs:_c_int00_noinit_noargs)
-                  00000298    0000000c     tm4c123gh6pm_startup_ccs.obj (.text)
-                  000002a4    00000004     rtsv7M4_T_le_v4SPD16_eabi.lib : pre_init.c.obj (.text:_system_pre_init)
-                  000002a8    00000004                                   : exit.c.obj (.text:abort:abort)
-                  000002ac    00000004     main.obj (.text)
+.text      0    0000026c    000024b6     
+                  0000026c    000010d8     Fee.obj (.text)
+                  00001344    00000904     Fee_Sector.obj (.text)
+                  00001c48    000007c8     Fls.obj (.text)
+                  00002410    00000104     main.obj (.text)
+                  00002514    0000009c     rtsv7M4_T_le_v4SPD16_eabi.lib : memcpy_t2.asm.obj (.text)
+                  000025b0    00000068                                   : copy_decompress_lzss.c.obj (.text:decompress:lzss:__TI_decompress_lzss)
+                  00002618    00000052     stub.obj (.text)
+                  0000266a    00000002     --HOLE-- [fill = 0]
+                  0000266c    00000044     rtsv7M4_T_le_v4SPD16_eabi.lib : autoinit.c.obj (.text:__TI_auto_init_nobinit_nopinit:__TI_auto_init_nobinit_nopinit)
+                  000026b0    00000034                                   : boot_cortex_m.c.obj (.text:_c_int00_noargs:_c_int00_noargs)
+                  000026e4    0000001c                                   : copy_zero_init.c.obj (.text:decompress:ZI:__TI_zero_init_nomemset:__TI_zero_init_nomemset)
+                  00002700    0000000e                                   : copy_decompress_none.c.obj (.text:decompress:none:__TI_decompress_none)
+                  0000270e    0000000c     tm4c123gh6pm_startup_ccs.obj (.text)
+                  0000271a    00000004     rtsv7M4_T_le_v4SPD16_eabi.lib : pre_init.c.obj (.text:_system_pre_init)
+                  0000271e    00000004                                   : exit.c.obj (.text:abort:abort)
 
-.cinit     0    00000000    00000000     UNINITIALIZED
+.cinit     0    00002728    00000090     
+                  00002728    00000069     (.cinit..data.load) [load image, compression = lzss]
+                  00002791    00000003     --HOLE-- [fill = 0]
+                  00002794    0000000c     (__TI_handler_table)
+                  000027a0    00000008     (.cinit..bss.load) [load image, compression = zero_init]
+                  000027a8    00000010     (__TI_cinit_table)
 
 .init_array 
 *          0    00000000    00000000     UNINITIALIZED
+
+.data      0    20000200    000001dc     UNINITIALIZED
+                  20000200    000000a0     Fee.obj (.data:ValidBlocksInfo)
+                  200002a0    00000078     Fee_PrivateCfg.obj (.data:Fee_BlockConfig)
+                  20000318    00000064     main.obj (.data:Wdata)
+                  2000037c    00000004     --HOLE--
+                  20000380    0000002c     Fee_Sector.obj (.data)
+                  200003ac    00000004     --HOLE--
+                  200003b0    00000014     Fee.obj (.data)
+                  200003c4    00000010     Fls.obj (.data)
+                  200003d4    00000008     Fls_PBcfg.obj (.data:Fls_Config)
+
+.bss       0    200003dc    00000163     UNINITIALIZED
+                  200003dc    000000dc     (.common:BlockData)
+                  200004b8    00000028     (.common:Rdata)
+                  200004e0    00000018     (.common:ActiveSectorInfo)
+                  200004f8    00000014     Fee_Sector.obj (.bss:cmd$1)
+                  2000050c    00000014     Fee_Sector.obj (.bss:cmd$4)
+                  20000520    0000000a     Fls.obj (.bss)
+                  2000052a    00000002     --HOLE--
+                  2000052c    00000008     (.common:JobParametersCopy)
+                  20000534    00000007     Fee.obj (.bss)
+                  2000053b    00000004     (.common:ModuleInternalManagement)
 
 .stack     0    20000000    00000200     UNINITIALIZED
                   20000000    00000004     rtsv7M4_T_le_v4SPD16_eabi.lib : boot_cortex_m.c.obj (.stack)
@@ -56,69 +97,240 @@ MODULE SUMMARY
        ------                         ----   -------   -------
     .\
        tm4c123gh6pm_startup_ccs.obj   12     620       0      
-       main.obj                       4      0         0      
+       main.obj                       260    0         140    
     +--+------------------------------+------+---------+---------+
-       Total:                         16     620       0      
+       Total:                         272    620       140    
+                                                              
+    .\bsw\gen\
+       Fls_PBcfg.obj                  0      0         8      
+    +--+------------------------------+------+---------+---------+
+       Total:                         0      0         8      
+                                                              
+    .\bsw\static\Interface\Fee\src\
+       Fee.obj                        4312   0         443    
+       Fee_Sector.obj                 2308   0         84     
+       Fee_PrivateCfg.obj             0      0         120    
+    +--+------------------------------+------+---------+---------+
+       Total:                         6620   0         647    
+                                                              
+    .\bsw\static\Mcal\Flash\src\
+       Fls.obj                        1992   0         26     
+    +--+------------------------------+------+---------+---------+
+       Total:                         1992   0         26     
+                                                              
+    .\bsw\stub\
+       stub.obj                       82     0         0      
+    +--+------------------------------+------+---------+---------+
+       Total:                         82     0         0      
                                                               
     C:\ti\ccs910\ccs\tools\compiler\ti-cgt-arm_18.12.2.LTS\lib\rtsv7M4_T_le_v4SPD16_eabi.lib
-       boot_cortex_m.c.obj            44     0         0      
+       memcpy_t2.asm.obj              156    0         0      
+       copy_decompress_lzss.c.obj     104    0         0      
+       autoinit.c.obj                 68     0         0      
+       boot_cortex_m.c.obj            52     0         0      
+       copy_zero_init.c.obj           28     0         0      
+       copy_decompress_none.c.obj     14     0         0      
        exit.c.obj                     4      0         0      
        pre_init.c.obj                 4      0         0      
     +--+------------------------------+------+---------+---------+
-       Total:                         52     0         0      
+       Total:                         430    0         0      
                                                               
        Stack:                         0      0         512    
+       Linker Generated:              0      141       0      
     +--+------------------------------+------+---------+---------+
-       Grand Total:                   68     620       512    
+       Grand Total:                   9396   761       1333   
+
+
+LINKER GENERATED COPY TABLES
+
+__TI_cinit_table @ 000027a8 records: 2, size/record: 8, table size: 16
+	.data: load addr=00002728, load size=00000069 bytes, run addr=20000200, run size=000001dc bytes, compression=lzss
+	.bss: load addr=000027a0, load size=00000008 bytes, run addr=200003dc, run size=00000163 bytes, compression=zero_init
+
+
+LINKER GENERATED HANDLER TABLE
+
+__TI_handler_table @ 00002794 records: 3, size/record: 4, table size: 12
+	index: 0, handler: __TI_decompress_lzss
+	index: 1, handler: __TI_decompress_none
+	index: 2, handler: __TI_zero_init
 
 
 GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name 
 
-address   name                  
--------   ----                  
-000002a9  C$$EXIT               
-00000299  ResetISR              
-20000200  __STACK_END           
-00000200  __STACK_SIZE          
-20000200  __STACK_TOP           
-ffffffff  __TI_pprof_out_hndl   
-ffffffff  __TI_prof_data_size   
-ffffffff  __TI_prof_data_start  
-00000000  __TI_static_base__    
-ffffffff  __binit__             
-ffffffff  __c_args__            
-UNDEFED   __mpu_init            
-20000000  __stack               
-0000026d  _c_int00_noinit_noargs
-000002a5  _system_pre_init      
-000002a9  abort                 
-ffffffff  binit                 
-00000000  g_pfnVectors          
-000002ad  main                  
+address   name                          
+-------   ----                          
+200004e0  ActiveSectorInfo              
+200003dc  BlockData                     
+0000271f  C$$EXIT                       
+00002619  Det_ReportError               
+0000264d  Det_ReportRuntimeError        
+00002633  Det_ReportTransientFault      
+00001811  Erase_Virtualsector           
+200002a0  Fee_BlockConfig               
+00000539  Fee_Cancel                    
+000005f3  Fee_GetJobResult              
+000005ed  Fee_GetStatus                 
+000006e3  Fee_GetVersionInfo            
+0000026d  Fee_Init                      
+00000621  Fee_InvalidateBlock           
+00000705  Fee_JobEndNotification        
+0000070d  Fee_JobErrorNotification      
+00000715  Fee_MainFunction              
+000002e1  Fee_Read                      
+0000042d  Fee_Write                     
+0000167d  FindActiveSector              
+00001345  FindValidBlocks               
+00002315  Fls_BlankCheck                
+000020e5  Fls_Cancel                    
+00002205  Fls_Compare                   
+200003d4  Fls_Config                    
+00001f65  Fls_Erase                     
+00002137  Fls_GetJobResult              
+00002131  Fls_GetStatus                 
+000022eb  Fls_GetVersionInfo            
+00001f09  Fls_Init                      
+000023a9  Fls_MainFunction              
+00002155  Fls_Read                      
+000022cd  Fls_SetMode                   
+00002021  Fls_Write                     
+00001b45  GetIndexFromBlockNum          
+00001881  GetSectorStatus               
+200003b0  JobDone                       
+200003b1  JobError                      
+2000052c  JobParametersCopy             
+2000053b  ModuleInternalManagement      
+00002667  NvM_JobEndNotification        
+00002669  NvM_JobErrorNotification      
+200004b8  Rdata                         
+00001705  ReadVariable                  
+0000270f  ResetISR                      
+000014c7  SearchSectorValidBlocks       
+000018a9  SetSectorStatus               
+00001929  TransferSector                
+20000200  ValidBlocksInfo               
+20000318  Wdata                         
+000018f1  WriteBlock                    
+00001785  WriteVariable                 
+00002411  Write_buffer                  
+20000200  __STACK_END                   
+00000200  __STACK_SIZE                  
+20000200  __STACK_TOP                   
+000027a8  __TI_CINIT_Base               
+000027b8  __TI_CINIT_Limit              
+00002794  __TI_Handler_Table_Base       
+000027a0  __TI_Handler_Table_Limit      
+0000266d  __TI_auto_init_nobinit_nopinit
+000025b1  __TI_decompress_lzss          
+00002701  __TI_decompress_none          
+ffffffff  __TI_pprof_out_hndl           
+ffffffff  __TI_prof_data_size           
+ffffffff  __TI_prof_data_start          
+00000000  __TI_static_base__            
+000026e5  __TI_zero_init_nomemset       
+00002515  __aeabi_memcpy                
+00002515  __aeabi_memcpy4               
+00002515  __aeabi_memcpy8               
+ffffffff  __binit__                     
+ffffffff  __c_args__                    
+UNDEFED   __mpu_init                    
+20000000  __stack                       
+000026b1  _c_int00_noargs               
+UNDEFED   _system_post_cinit            
+0000271b  _system_pre_init              
+0000271f  abort                         
+ffffffff  binit                         
+00000000  g_pfnVectors                  
+0000244f  main                          
+00002515  memcpy                        
 
 
 GLOBAL SYMBOLS: SORTED BY Symbol Address 
 
-address   name                  
--------   ----                  
-00000000  __TI_static_base__    
-00000000  g_pfnVectors          
-00000200  __STACK_SIZE          
-0000026d  _c_int00_noinit_noargs
-00000299  ResetISR              
-000002a5  _system_pre_init      
-000002a9  C$$EXIT               
-000002a9  abort                 
-000002ad  main                  
-20000000  __stack               
-20000200  __STACK_END           
-20000200  __STACK_TOP           
-ffffffff  __TI_pprof_out_hndl   
-ffffffff  __TI_prof_data_size   
-ffffffff  __TI_prof_data_start  
-ffffffff  __binit__             
-ffffffff  __c_args__            
-ffffffff  binit                 
-UNDEFED   __mpu_init            
+address   name                          
+-------   ----                          
+00000000  __TI_static_base__            
+00000000  g_pfnVectors                  
+00000200  __STACK_SIZE                  
+0000026d  Fee_Init                      
+000002e1  Fee_Read                      
+0000042d  Fee_Write                     
+00000539  Fee_Cancel                    
+000005ed  Fee_GetStatus                 
+000005f3  Fee_GetJobResult              
+00000621  Fee_InvalidateBlock           
+000006e3  Fee_GetVersionInfo            
+00000705  Fee_JobEndNotification        
+0000070d  Fee_JobErrorNotification      
+00000715  Fee_MainFunction              
+00001345  FindValidBlocks               
+000014c7  SearchSectorValidBlocks       
+0000167d  FindActiveSector              
+00001705  ReadVariable                  
+00001785  WriteVariable                 
+00001811  Erase_Virtualsector           
+00001881  GetSectorStatus               
+000018a9  SetSectorStatus               
+000018f1  WriteBlock                    
+00001929  TransferSector                
+00001b45  GetIndexFromBlockNum          
+00001f09  Fls_Init                      
+00001f65  Fls_Erase                     
+00002021  Fls_Write                     
+000020e5  Fls_Cancel                    
+00002131  Fls_GetStatus                 
+00002137  Fls_GetJobResult              
+00002155  Fls_Read                      
+00002205  Fls_Compare                   
+000022cd  Fls_SetMode                   
+000022eb  Fls_GetVersionInfo            
+00002315  Fls_BlankCheck                
+000023a9  Fls_MainFunction              
+00002411  Write_buffer                  
+0000244f  main                          
+00002515  __aeabi_memcpy                
+00002515  __aeabi_memcpy4               
+00002515  __aeabi_memcpy8               
+00002515  memcpy                        
+000025b1  __TI_decompress_lzss          
+00002619  Det_ReportError               
+00002633  Det_ReportTransientFault      
+0000264d  Det_ReportRuntimeError        
+00002667  NvM_JobEndNotification        
+00002669  NvM_JobErrorNotification      
+0000266d  __TI_auto_init_nobinit_nopinit
+000026b1  _c_int00_noargs               
+000026e5  __TI_zero_init_nomemset       
+00002701  __TI_decompress_none          
+0000270f  ResetISR                      
+0000271b  _system_pre_init              
+0000271f  C$$EXIT                       
+0000271f  abort                         
+00002794  __TI_Handler_Table_Base       
+000027a0  __TI_Handler_Table_Limit      
+000027a8  __TI_CINIT_Base               
+000027b8  __TI_CINIT_Limit              
+20000000  __stack                       
+20000200  ValidBlocksInfo               
+20000200  __STACK_END                   
+20000200  __STACK_TOP                   
+200002a0  Fee_BlockConfig               
+20000318  Wdata                         
+200003b0  JobDone                       
+200003b1  JobError                      
+200003d4  Fls_Config                    
+200003dc  BlockData                     
+200004b8  Rdata                         
+200004e0  ActiveSectorInfo              
+2000052c  JobParametersCopy             
+2000053b  ModuleInternalManagement      
+ffffffff  __TI_pprof_out_hndl           
+ffffffff  __TI_prof_data_size           
+ffffffff  __TI_prof_data_start          
+ffffffff  __binit__                     
+ffffffff  __c_args__                    
+ffffffff  binit                         
+UNDEFED   __mpu_init                    
+UNDEFED   _system_post_cinit            
 
-[19 symbols]
+[83 symbols]
