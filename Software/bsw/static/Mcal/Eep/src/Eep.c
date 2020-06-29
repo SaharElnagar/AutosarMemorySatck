@@ -218,7 +218,7 @@ void Eep_Init( const Eep_ConfigType* ConfigPtr )
     #if(EepDevErrorDetect == STD_ON)
         if(ConfigPtr == NULL_PTR)
         {
-            Det_ReportError(EEPROM_DRIVER_ID, INSTANCE_ID,EEP_INIT_API_ID,EEP_E_PARAM_POINTER);
+            Det_ReportError(EEPROM_DRIVER_ID, EEP_INSTANCE_ID,EEP_INIT_API_ID,EEP_E_PARAM_POINTER);
         }
     #endif
 
@@ -250,7 +250,7 @@ void Eep_Init( const Eep_ConfigType* ConfigPtr )
       {
           /* Report error to Det Init failed */
         #if(EepDevErrorDetect == STD_ON)
-           Det_ReportError(EEPROM_DRIVER_ID, INSTANCE_ID,EEP_INIT_API_ID,EEP_E_INIT_FAILED);
+           Det_ReportError(EEPROM_DRIVER_ID, EEP_INSTANCE_ID,EEP_INIT_API_ID,EEP_E_INIT_FAILED);
         #endif
       }
 
@@ -275,7 +275,7 @@ void Eep_Init( const Eep_ConfigType* ConfigPtr )
        {
           /* Report error to Det Init failed */
           #if(EepDevErrorDetect == STD_ON)
-             Det_ReportError(EEPROM_DRIVER_ID, INSTANCE_ID,EEP_INIT_API_ID,EEP_E_INIT_FAILED);
+             Det_ReportError(EEPROM_DRIVER_ID, EEP_INSTANCE_ID,EEP_INIT_API_ID,EEP_E_INIT_FAILED);
           #endif
        }
 
@@ -305,7 +305,7 @@ Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_L
     if(EepromAddress > EEP_END_ADDRESS)
     {
         #if (EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_READ_API_ID,EEP_E_PARAM_ADDRESS);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_READ_API_ID,EEP_E_PARAM_ADDRESS);
         #else
             return E_NOT_OK;
         #endif
@@ -313,7 +313,7 @@ Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_L
     else if(DataBufferPtr == NULL_PTR)
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_READ_API_ID,EEP_E_PARAM_POINTER);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_READ_API_ID,EEP_E_PARAM_POINTER);
         #else
             return E_NOT_OK;
         #endif
@@ -321,7 +321,7 @@ Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_L
     else if(Length < MIN_LENGTH || Length > (EEP_SIZE - EepromAddress))
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_READ_API_ID,EEP_E_PARAM_LENGTH);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_READ_API_ID,EEP_E_PARAM_LENGTH);
         #else
             return E_NOT_OK;
         #endif
@@ -332,7 +332,7 @@ Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_L
     else if(StatusType != MEMIF_IDLE)
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_READ_API_ID,EEP_E_UNINIT);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_READ_API_ID,EEP_E_UNINIT);
         #else
             return E_NOT_OK;
         #endif
@@ -343,7 +343,7 @@ Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_L
     else if(StatusType == MEMIF_BUSY ||JobResult == MEMIF_JOB_PENDING)
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_READ_API_ID,EEP_E_BUSY);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_READ_API_ID,EEP_E_BUSY);
         #else
             return E_NOT_OK;
         #endif
@@ -395,7 +395,7 @@ Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferP
    if(EepromAddress > EEP_END_ADDRESS)
    {
        #if (EepDevErrorDetect==STD_ON)
-           Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_PARAM_ADDRESS);
+           Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_PARAM_ADDRESS);
        #endif
            return E_NOT_OK;
 
@@ -403,7 +403,7 @@ Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferP
    else if(DataBufferPtr == NULL_PTR)
    {
        #if(EepDevErrorDetect==STD_ON)
-           Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_PARAM_POINTER);
+           Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_PARAM_POINTER);
        #endif
            return E_NOT_OK;
 
@@ -411,7 +411,7 @@ Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferP
    else if(Length < MIN_LENGTH || Length > (EEP_SIZE - EepromAddress))
    {
        #if(EepDevErrorDetect==STD_ON)
-           Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_PARAM_LENGTH);
+           Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_PARAM_LENGTH);
        #endif
            return E_NOT_OK;
 
@@ -422,7 +422,7 @@ Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferP
    else if(StatusType != MEMIF_IDLE)
    {
        #if(EepDevErrorDetect==STD_ON)
-           Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_UNINIT);
+           Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_UNINIT);
        #endif
            return E_NOT_OK;
 
@@ -433,7 +433,7 @@ Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferP
    else if(StatusType == MEMIF_BUSY ||JobResult == MEMIF_JOB_PENDING)
    {
        #if(EepDevErrorDetect==STD_ON)
-           Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_BUSY);
+           Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_BUSY);
        #endif
            return E_NOT_OK;
    }
@@ -482,7 +482,7 @@ Std_ReturnType Eep_Erase(Eep_AddressType EepromAddress,Eep_LengthType Length )
       if(EepromAddress > EEP_END_ADDRESS)
       {
           #if (EepDevErrorDetect==STD_ON)
-              Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_PARAM_ADDRESS);
+              Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_PARAM_ADDRESS);
           #endif
               return E_NOT_OK;
       }
@@ -490,7 +490,7 @@ Std_ReturnType Eep_Erase(Eep_AddressType EepromAddress,Eep_LengthType Length )
       else if(Length !=EepEraseUnitSize)
       {
           #if(EepDevErrorDetect==STD_ON)
-              Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_PARAM_LENGTH);
+              Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_PARAM_LENGTH);
           #endif
               return E_NOT_OK;
       }
@@ -500,7 +500,7 @@ Std_ReturnType Eep_Erase(Eep_AddressType EepromAddress,Eep_LengthType Length )
       else if(StatusType != MEMIF_IDLE)
       {
           #if(EepDevErrorDetect==STD_ON)
-              Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_UNINIT);
+              Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_UNINIT);
           #endif
               return E_NOT_OK;
       }
@@ -510,7 +510,7 @@ Std_ReturnType Eep_Erase(Eep_AddressType EepromAddress,Eep_LengthType Length )
       else if(StatusType == MEMIF_BUSY ||JobResult == MEMIF_JOB_PENDING )
       {
           #if(EepDevErrorDetect==STD_ON)
-              Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_BUSY);
+              Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_BUSY);
           #endif
               return E_NOT_OK;
       }
@@ -559,21 +559,21 @@ Std_ReturnType Eep_Compare(Eep_AddressType EepromAddress,const uint8* DataBuffer
     if(EepromAddress > EEP_END_ADDRESS)
     {
         #if (EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_PARAM_ADDRESS);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_PARAM_ADDRESS);
         #endif
             return E_NOT_OK;
     }
     else if(DataBufferPtr == NULL_PTR)
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_PARAM_POINTER);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_PARAM_POINTER);
         #endif
             return E_NOT_OK;
     }
     else if(Length < MIN_LENGTH || Length > (EEP_SIZE - EepromAddress))
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_PARAM_LENGTH);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_PARAM_LENGTH);
         #endif
             return E_NOT_OK;
 
@@ -584,7 +584,7 @@ Std_ReturnType Eep_Compare(Eep_AddressType EepromAddress,const uint8* DataBuffer
     else if(StatusType != MEMIF_IDLE)
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_UNINIT);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_UNINIT);
         #endif
             return E_NOT_OK;
 
@@ -595,7 +595,7 @@ Std_ReturnType Eep_Compare(Eep_AddressType EepromAddress,const uint8* DataBuffer
     else if(StatusType == MEMIF_BUSY ||JobResult == MEMIF_JOB_PENDING)
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_BUSY);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_BUSY);
         #endif
         return E_NOT_OK;
     }

@@ -733,10 +733,10 @@ Std_ReturnType NvM_ReadBlock( NvM_BlockIdType BlockId, void* NvM_DstPtr )
         rtn_val = E_NOT_OK ;
     }
     /*Return E_NOT_OK if Queue is FULL*/
-   /* TODO else if(Queue.size == NVM_SIZE_STANDARD_JOB_QUEUE)
+    else if(Standard_Queue_FULL)
     {
         rtn_val = E_NOT_OK ;
-    }*/
+    }
     /*No detected errors*/
     else
     {

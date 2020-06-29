@@ -39,7 +39,8 @@
 //The size in bytes to which logical blocks shall be aligned = 1KB = 1024 BYTE
 #define FeeVirtualPageSize							0x00000400
 
-#define FeeDeviceIndex                                  (1U)
+/*Reference to the device this block is stored in*/
+#define  FEE_DEVICE_INDEX                      (0U)
 /*****************************************************************************************/
 /*FeeBlockConfiguration                  																								 */
 /*Configuration of block specific parameters for the Flash EEPROM Emulation module       */

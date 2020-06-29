@@ -92,7 +92,7 @@
 #define EA_BLOCK_1_IMMEDIATE_DATA             (0U)             /*False*/
 
 /*Reference to the device this block is stored in*/
-#define  _DEVICE_INDEX                        (0U)
+#define  EA_DEVICE_INDEX                      (1U)
 
 /* ECUC_Ea_00122 :   EaNvmJobErrorNotification
  * Mapped to the job error notification routine provided by the upper layer

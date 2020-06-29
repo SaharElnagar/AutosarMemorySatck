@@ -165,7 +165,7 @@ static void Fls_Write_AC(void){
 							
 							if(Byte_Buffer != ERASED_BYTE){
 									Job_Result = MEMIF_JOB_FAILED;
-									 Det_ReportRuntimeError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_VERIFY_ERASE_FAILED);
+									 Det_ReportRuntimeError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_VERIFY_ERASE_FAILED);
 							}
 						}
 		
@@ -225,7 +225,7 @@ static void Fls_Write_AC(void){
 						{
 							 HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC  | FLASH_FCMISC_INVDMISC | FLASH_FCMISC_PROGMISC;
 							 Job_Result = MEMIF_JOB_FAILED;
-							  Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_WRITE_FAILED);
+							  Det_ReportTransientFault(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_WRITE_FAILED);
 						}
 					#endif
 				}
@@ -243,7 +243,7 @@ static void Fls_Write_AC(void){
 					
 					if(Byte_buffer != *Compare_data++){
 							Job_Result = MEMIF_JOB_FAILED;
-							 Det_ReportRuntimeError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_VERIFY_WRITE_FAILED);
+							 Det_ReportRuntimeError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_VERIFY_WRITE_FAILED);
 					}
 				}
 					
@@ -371,7 +371,7 @@ static void Fls_Erase_AC(void){
 
 						if(Word_Buffer != ERASED_WORD){
 								Job_Result = MEMIF_JOB_FAILED;
-								 Det_ReportRuntimeError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_VERIFY_ERASE_FAILED);
+								 Det_ReportRuntimeError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_VERIFY_ERASE_FAILED);
 						}
 				}
 				
@@ -441,7 +441,7 @@ static void Fls_Compare_AC(void){
 				if(HWREG(FLASH_FCRIS) & (FLASH_FCRIS_ARIS | FLASH_FCRIS_VOLTRIS)){
 						HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC;
 						Job_Result = MEMIF_JOB_FAILED;
-						 Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_COMPARE_FAILED);
+						 Det_ReportTransientFault(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_COMPARE_FAILED);
 				}
 		}
 		#if (FlsJobEndNotificationEnable == STD_ON)
@@ -477,7 +477,7 @@ static void Fls_BlankCheck_AC(void){
 				if(HWREG(FLASH_FCRIS) & (FLASH_FCRIS_ARIS | FLASH_FCRIS_VOLTRIS)){
 						HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC;
 						Job_Result = MEMIF_JOB_FAILED;
-						 Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_COMPARE_FAILED);
+						 Det_ReportTransientFault(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_COMPARE_FAILED);
 				}
 		}
 		
@@ -555,23 +555,23 @@ Std_ReturnType Fls_Erase( Fls_AddressType TargetAddress, Fls_LengthType Length )
 		#if (FlsDevErrorDetect == STD_ON)
 		
 				if(Module_Status == MEMIF_UNINIT){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_UNINIT);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_UNINIT);
 						return E_NOT_OK;
 				}
 				
 				if(Module_Status == MEMIF_BUSY){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_BUSY);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_BUSY);
 						return E_NOT_OK;
 				}
 				
 				if(((TargetAddress + FlsBaseAddress) % FlsSectorSize != 0) || (TargetAddress > FlsTotalSize - 1)){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_PARAM_ADDRESS);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_PARAM_ADDRESS);
 						return E_NOT_OK;
 				}
 					
 				if(Length <= 0 || (TargetAddress + Length > FlsTotalSize) || ((TargetAddress + Length) % FlsSectorSize != 0)){
 			
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_PARAM_LENGTH);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_PARAM_LENGTH);
 						return E_NOT_OK;
 				}
 				
@@ -608,28 +608,28 @@ Std_ReturnType Fls_Write( Fls_AddressType TargetAddress, const uint8* SourceAddr
 		#if (FlsDevErrorDetect == STD_ON)
 	
 				if(Module_Status == MEMIF_UNINIT){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_UNINIT);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_UNINIT);
 						return E_NOT_OK;
 				}
 				
 				if(Module_Status == MEMIF_BUSY){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_BUSY);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_BUSY);
 						return E_NOT_OK;
 				}
 				
 				if(((TargetAddress + FlsBaseAddress) % FlsPageSize != 0) || (TargetAddress > FlsTotalSize - 1)){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_PARAM_ADDRESS);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_PARAM_ADDRESS);
 						return E_NOT_OK;
 				}
 				
 				if(Length <= 0 || (TargetAddress + Length > FlsTotalSize) || ((TargetAddress + Length) % FlsPageSize != 0)){
 			
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_PARAM_LENGTH);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_PARAM_LENGTH);
 						return E_NOT_OK;
 				}
 				
 				if(SourceAddressPtr == NULL){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_PARAM_DATA);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_PARAM_DATA);
 						return E_NOT_OK;
 				}
 				
@@ -659,7 +659,7 @@ void Fls_Cancel( void ){
 	
 		#if (FlsDevErrorDetect == STD_ON)
 				if(Module_Status == MEMIF_UNINIT){
-					 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_CANCEL_API_ID, FLS_E_UNINIT);
+					 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_CANCEL_API_ID, FLS_E_UNINIT);
 					return;
 				}
 		#endif
@@ -710,7 +710,7 @@ MemIf_JobResultType Fls_GetJobResult( void ){
 	
 		#if (FlsDevErrorDetect == STD_ON)
 				if(Module_Status == MEMIF_UNINIT){
-					 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_GETJOBRESULT_API_ID, FLS_E_UNINIT);
+					 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_GETJOBRESULT_API_ID, FLS_E_UNINIT);
 					return MEMIF_JOB_FAILED;
 				}
 		#endif
@@ -738,27 +738,27 @@ Std_ReturnType Fls_Read( Fls_AddressType SourceAddress, uint8* TargetAddressPtr,
 		#if (FlsDevErrorDetect == STD_ON)
 	
 				if(Module_Status == MEMIF_UNINIT){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_UNINIT);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_READ_API_ID, FLS_E_UNINIT);
 						return E_NOT_OK;
 				}
 				
 				if(Module_Status == MEMIF_BUSY){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_BUSY);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_READ_API_ID, FLS_E_BUSY);
 						return E_NOT_OK;
 				}
 				
 				if (SourceAddress > (FlsTotalSize - 1)){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_PARAM_ADDRESS);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_READ_API_ID, FLS_E_PARAM_ADDRESS);
 						return E_NOT_OK;
 				}
 				
 				if(Length <= 0 || (SourceAddress + Length > FlsTotalSize)){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_PARAM_LENGTH);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_READ_API_ID, FLS_E_PARAM_LENGTH);
 						return E_NOT_OK;
 				}
 				
 				if(TargetAddressPtr == NULL){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_PARAM_DATA);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_READ_API_ID, FLS_E_PARAM_DATA);
 						return E_NOT_OK;
 				}
 		#endif
@@ -795,27 +795,27 @@ Std_ReturnType Fls_Compare( Fls_AddressType SourceAddress, const uint8* TargetAd
 		#if (FlsDevErrorDetect == STD_ON)
 	
 				if(Module_Status == MEMIF_UNINIT){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_UNINIT);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_UNINIT);
 						return E_NOT_OK;
 				}
 				
 				if(Module_Status == MEMIF_BUSY){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_BUSY);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_BUSY);
 						return E_NOT_OK;
 				}
 				
 				if(SourceAddress > FlsTotalSize - 1){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_PARAM_ADDRESS);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_PARAM_ADDRESS);
 						return E_NOT_OK;
 				}
 				
 				if(Length <= 0 || (SourceAddress + Length > FlsTotalSize)){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_PARAM_LENGTH);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_PARAM_LENGTH);
 						return E_NOT_OK;
 				}
 				
 				if(TargetAddressPtr == NULL){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_PARAM_DATA);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_PARAM_DATA);
 						return E_NOT_OK;
 				}
 		#endif
@@ -848,7 +848,7 @@ void Fls_SetMode( MemIf_ModeType Mode ){
 	
 		#if (FlsDevErrorDetect == STD_ON)
 				if(Module_Status == MEMIF_BUSY){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_SETMODE_API_ID, FLS_E_BUSY);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_SETMODE_API_ID, FLS_E_BUSY);
 						return;
 				}
 		#endif
@@ -868,12 +868,12 @@ void Fls_GetVersionInfo( Std_VersionInfoType* VersioninfoPtr ){
 
 		#if (FlsDevErrorDetect == STD_ON)
 				if(VersioninfoPtr == NULL){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_GETVERSIONINFO_API_ID, FLS_E_PARAM_POINTER);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_GETVERSIONINFO_API_ID, FLS_E_PARAM_POINTER);
 						return;
 				}
 		#endif
 		VersioninfoPtr->moduleID = FLASH_DRIVER_ID;
-		VersioninfoPtr->instanceID = INSTANCE_ID;
+		VersioninfoPtr->instanceID = FLS_INSTANCE_ID;
 		/*******************************************************************************/
 		//  Rest of version info
 		/*******************************************************************************/
@@ -897,23 +897,23 @@ Std_ReturnType Fls_BlankCheck( Fls_AddressType TargetAddress, Fls_LengthType Len
 		#if (FlsDevErrorDetect == STD_ON)
 		
 				if(Module_Status == MEMIF_UNINIT){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_UNINIT);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_UNINIT);
 						return E_NOT_OK;
 				}
 				
 				if(Module_Status == MEMIF_BUSY){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_BUSY);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_BUSY);
 						return E_NOT_OK;
 				}
 				
 				if(TargetAddress > FlsTotalSize - 1){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_PARAM_ADDRESS);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_PARAM_ADDRESS);
 						return E_NOT_OK;
 				}
 					
 				if(Length <= 0 || (TargetAddress + Length > FlsTotalSize)){
 			
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_PARAM_LENGTH);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_PARAM_LENGTH);
 						return E_NOT_OK;
 				}
 				
@@ -946,7 +946,7 @@ void Fls_MainFunction( void ){
 		#if (FlsDevErrorDetect == STD_ON)
 				
 				if(Module_Status == MEMIF_UNINIT){
-						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_UNINIT);
+						 Det_ReportError(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_UNINIT);
 				}
 		#endif
 	
@@ -994,7 +994,7 @@ void Fls_MainFunction( void ){
 				{
 					 HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC  | FLASH_FCMISC_INVDMISC | FLASH_FCMISC_PROGMISC; 
 					 Job_Result = MEMIF_JOB_FAILED;
-					  Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_WRITE_FAILED);
+					  Det_ReportTransientFault(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_WRITE_FAILED);
 				}
 				
 				if(End_Job_Flag == 1){
@@ -1020,7 +1020,7 @@ void Fls_MainFunction( void ){
 				{
 						HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC  | FLASH_FCMISC_ERMISC; 
 						Job_Result = MEMIF_JOB_FAILED;
-						 Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_ERASE_FAILED);
+						 Det_ReportTransientFault(FLASH_DRIVER_ID, FLS_INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_ERASE_FAILED);
 				}
 				if(End_Job_Flag == 1){
 						End_Job_Flag = 0;

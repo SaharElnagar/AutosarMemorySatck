@@ -9,19 +9,15 @@
 #define BSP_MEMIF_MEMIF_H_
 
 #include "MemIf_Types.h"
+#include "Std_Types.h"
 
-#define MemIf_Write(DeviceIndex, BlockNumber, DataPtr) \
-Fee_Write(BlockNumber, DataPtr)
+Std_ReturnType MemIf_Read(uint8 DeviceIndex, uint16 BlockNumber, uint8* DataBufferPtr, uint16 Length);
 
-#define MemIf_Read( DeviceIndex,BlockNumber, DataBufferPtr, Length)\
-		Fee_Read( BlockNumber,DataBufferPtr, Length )
+Std_ReturnType MemIf_Write(uint8 DeviceIndex,uint16 BlockNumber,const uint8* DataBufferPtr);
 
-#define MemIf_GetStatus( DeviceIndex)\
-		Fee_GetStatus()
+MemIf_StatusType MemIf_GetStatus(uint8 DeviceIndex);
 
-#define MemIf_GetJobResult(DeviceIndex) \
-		Fee_GetJobResult()
+MemIf_JobResultType MemIf_GetJobResult(uint8 DeviceIndex);
 
-
-
+Std_ReturnType MemIf_InvalidateBlock(uint8 DeviceIndex,uint16 BlockNumber) ;
 #endif /* BSP_MEMIF_MEMIF_H_ */

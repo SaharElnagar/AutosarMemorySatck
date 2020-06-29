@@ -28,6 +28,7 @@ ORDERED_OBJS += \
 "./bsw/static/Mcal/Flash/src/Fls.obj" \
 "./bsw/static/Service/NvM/src/NvM.obj" \
 "./bsw/static/Service/NvM/src/Queue.obj" \
+"./bsw/stub/AppCfg.obj" \
 "./bsw/stub/stub.obj" \
 "../tm4c123gh6pm.cmd" \
 $(GEN_CMDS__FLAG) \
@@ -190,8 +191,8 @@ MemoryStack.hex: $(EXE_OUTPUTS)
 # Other Targets
 clean:
 	-$(RM) $(BIN_OUTPUTS__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "main.obj" "tm4c123gh6pm_startup_ccs.obj" "bsw\gen\Eep_PBcfg.obj" "bsw\gen\Fls_PBcfg.obj" "bsw\gen\NvM_Lcfg.obj" "bsw\static\Infrastructure\platform\src\cpu.obj" "bsw\static\Infrastructure\platform\src\interrupt.obj" "bsw\static\Infrastructure\platform\src\sysctl.obj" "bsw\static\Interface\EA\src\Ea.obj" "bsw\static\Interface\EA\src\Ea_PrivateCfg.obj" "bsw\static\Interface\FEE\src\Fee.obj" "bsw\static\Interface\FEE\src\Fee_PrivateCfg.obj" "bsw\static\Interface\FEE\src\Fee_Sector.obj" "bsw\static\Interface\MemIf\src\MemIf.obj" "bsw\static\Mcal\Eep\src\Eep.obj" "bsw\static\Mcal\Flash\src\Fls.obj" "bsw\static\Service\NvM\src\NvM.obj" "bsw\static\Service\NvM\src\Queue.obj" "bsw\stub\stub.obj" 
-	-$(RM) "main.d" "tm4c123gh6pm_startup_ccs.d" "bsw\gen\Eep_PBcfg.d" "bsw\gen\Fls_PBcfg.d" "bsw\gen\NvM_Lcfg.d" "bsw\static\Infrastructure\platform\src\cpu.d" "bsw\static\Infrastructure\platform\src\interrupt.d" "bsw\static\Infrastructure\platform\src\sysctl.d" "bsw\static\Interface\EA\src\Ea.d" "bsw\static\Interface\EA\src\Ea_PrivateCfg.d" "bsw\static\Interface\FEE\src\Fee.d" "bsw\static\Interface\FEE\src\Fee_PrivateCfg.d" "bsw\static\Interface\FEE\src\Fee_Sector.d" "bsw\static\Interface\MemIf\src\MemIf.d" "bsw\static\Mcal\Eep\src\Eep.d" "bsw\static\Mcal\Flash\src\Fls.d" "bsw\static\Service\NvM\src\NvM.d" "bsw\static\Service\NvM\src\Queue.d" "bsw\stub\stub.d" 
+	-$(RM) "main.obj" "tm4c123gh6pm_startup_ccs.obj" "bsw\gen\Eep_PBcfg.obj" "bsw\gen\Fls_PBcfg.obj" "bsw\gen\NvM_Lcfg.obj" "bsw\static\Infrastructure\platform\src\cpu.obj" "bsw\static\Infrastructure\platform\src\interrupt.obj" "bsw\static\Infrastructure\platform\src\sysctl.obj" "bsw\static\Interface\EA\src\Ea.obj" "bsw\static\Interface\EA\src\Ea_PrivateCfg.obj" "bsw\static\Interface\FEE\src\Fee.obj" "bsw\static\Interface\FEE\src\Fee_PrivateCfg.obj" "bsw\static\Interface\FEE\src\Fee_Sector.obj" "bsw\static\Interface\MemIf\src\MemIf.obj" "bsw\static\Mcal\Eep\src\Eep.obj" "bsw\static\Mcal\Flash\src\Fls.obj" "bsw\static\Service\NvM\src\NvM.obj" "bsw\static\Service\NvM\src\Queue.obj" "bsw\stub\AppCfg.obj" "bsw\stub\stub.obj" 
+	-$(RM) "main.d" "tm4c123gh6pm_startup_ccs.d" "bsw\gen\Eep_PBcfg.d" "bsw\gen\Fls_PBcfg.d" "bsw\gen\NvM_Lcfg.d" "bsw\static\Infrastructure\platform\src\cpu.d" "bsw\static\Infrastructure\platform\src\interrupt.d" "bsw\static\Infrastructure\platform\src\sysctl.d" "bsw\static\Interface\EA\src\Ea.d" "bsw\static\Interface\EA\src\Ea_PrivateCfg.d" "bsw\static\Interface\FEE\src\Fee.d" "bsw\static\Interface\FEE\src\Fee_PrivateCfg.d" "bsw\static\Interface\FEE\src\Fee_Sector.d" "bsw\static\Interface\MemIf\src\MemIf.d" "bsw\static\Mcal\Eep\src\Eep.d" "bsw\static\Mcal\Flash\src\Fls.d" "bsw\static\Service\NvM\src\NvM.d" "bsw\static\Service\NvM\src\Queue.d" "bsw\stub\AppCfg.d" "bsw\stub\stub.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

@@ -9,6 +9,7 @@
 #define BSW_GEN_NVM_CFG_H_
 
 #include "Std_types.h"
+#include "Fee_Cfg.h"
 
 /*****************************************************************************************/
 /*                                  NvMCommon Container                                  */
@@ -123,8 +124,9 @@
 /*                                 NvMBlockDescriptor                                    */
 /*****************************************************************************************/
 
-#define NUMBER_OF_NVM_BLOCKS                (3U)
+#define NUMBER_OF_NVM_BLOCKS                (5U)
 
+#define CRC_SIZE                            (4U)
 /*ECUC_NvM_00481
  * Identification of a NVRAM block via a unique block identifier. Implementation Type: NvM_BlockIdType.
  *min = 2 max = 2^(16- NVM_DATASET_SELECTION_BITS)-1
@@ -132,86 +134,23 @@
  *NvM_GetErrorStatus 1 -> redundant NVRAM block which holds the configuration ID
  *(generation tool should check that this block is correctly configured from type,CRC and size point of view)
  */
-#define NVM_NVRAM_BLOCK_0_ID                (2U)
 
-/*ECUC_NvM_00036
- *Defines CRC usage for the NVRAM block, memory space for CRC is reserved in RAM and NV memory.
- *true: CRC will be used for this NVRAM block.
- *false: CRC will not be used for this NVRAM block.
- */
-#define  NVM_BLOCK_0_USE_CRC                STD_ON
+/***************************BLOCK_2 CFG********************************/
+#define NVM_NVRAM_BLOCK_2_ID                (2U)
+#define NVM_NVRAM_BLOCK_2_BASENUMBER        (BLOCK_1_NUMBER<<NVM_DATASET_SELECTION_BITS)
+#define NVM_NVRAM_BLOCK_2_LENGTH            (BLOCK_1_SIZE-4)
 
-/* ECUC_NvM_00476
- * Defines CRC data width for the NVRAM block. Default:
- * NVM_CRC16, i.e. CRC16 will be used if NVM_BLOCK_USE_CRC==true
- * */
-#if(NVM_BLOCK_0_USE_CRC == STD_ON)
-#define NVM_BLOCK_0_CRC_TYPE                NVM_CRC32
-#endif
+/***************************BLOCK_3 CFG********************************/
+#define NVM_NVRAM_BLOCK_3_ID                (3U)
+#define NVM_NVRAM_BLOCK_3_BASENUMBER        (BLOCK_2_NUMBER<<NVM_DATASET_SELECTION_BITS)
+#define NVM_NVRAM_BLOCK_3_LENGTH            (BLOCK_2_SIZE-4)
 
-/*ECUC_NvM_00477
- *Defines the job priority for a NVRAM block (0 = Immediate priority).
- * */
-#define  NVM_BLOCK_0_JOB_PRIORITY           (1U)
+/***************************BLOCK_4 CFG********************************/
+#define NVM_NVRAM_BLOCK_4_ID                (4U)
+#define NVM_NVRAM_BLOCK_4_BASENUMBER        (BLOCK_9_NUMBER<<NVM_DATASET_SELECTION_BITS)
+#define NVM_NVRAM_BLOCK_4_LENGTH            (BLOCK_9_SIZE-4)
 
-/*ECUC_NvM_00062
- *Defines the block management type for the NVRAM block.
- */
-#define  NVM_BLOCK_0_MANAGEMENT_TYPE        NVM_BLOCK_DATASET
 
-/*
- * ECUC_NvM_00557
- * Defines whether the RAM Block shall be
- * auto validated during shutdown phase.
- * true: if auto validation mechanism is used,
- * false: otherwise
- */
-#define  NVM_BLOCK_0_USE_AUTO_VALIDATION    STD_ON
-
-/* ECUC_NvM_00556
- * Defines whether the CRC of the RAM Block shall be compared during
- * a write job with the CRC which was calculated during the last successful
- * read or write job. true: if compare mechanism is used, false: otherwise
- */
-#define  NVM_BLOCK_0_USE_CRC_COMP_MECHANISM     STD_ON
-
-/*ECUC_NvM_00552
- * Defines if NvMSetRamBlockStatusApi shall be used for this block or not.
- * Note: If NvMSetRamBlockStatusApi is disabled this configuration parameter shall be ignored.
- * true: calling of NvMSetRamBlockStatus for this RAM block shall set the status of the RAM block.
- *false: calling of NvMSetRamBlockStatus for this RAM block shall be ignored.
- */
-#define  NVM_BLOCK_0_USE_SET_RAM_BLOCK_STATUS   STD_ON
-
-/* ECUC_NvM_00519
- * Defines whether an explicit synchronization mechanism with a RAM mirror
- * and callback routines for transferring data to and from NvM module's RAM mirror
- * is used for NV block. true if synchronization mechanism is used,
- * false otherwise.
- */
-#define  NVM_BLOCK_0_USE_SYNC_MECHANISM         STD_ON
-
-/*ECUC_NvM_00033
- *Defines an initial write protection of the NV block
- *true: Initial block write protection is enabled.
- *false: Initial block write protection is disabled.
- */
-#define  NVM_BLOCK_0_WRITE_PROT                 STD_OFF
-
-/* ECUC_NvM_00551
- * This parameter specifies whether BswM is informed about the current status of the specified block.
- * True: Call BswM_NvM_CurrentBlockMode on changes
- * False: Don't inform BswM at all
- */
-#define NVM_BSWM_BLOCK_0_STATUS_INFORMATION     STD_OFF
-
-/*ECUC_NvM_00119
- *Defines CRC (re)calculation for the permanent RAM block or NVRAM blocks which are configured to use explicit
- *synchronization mechanism.
- *true: CRC will be (re)calculated for this permanent RAM block.
- *false: CRC will not be (re)calculated for this permanent RAM block.
- */
-#define NVM_CALC_RAM_BLOCK_CRC                  STD_ON
-
+#define MAX_NVM_BLOCK_SIZE                  (100U)
 
 #endif /* BSW_GEN_NVM_CFG_H_ */

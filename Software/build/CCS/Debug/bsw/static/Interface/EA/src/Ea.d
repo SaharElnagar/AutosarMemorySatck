@@ -7,7 +7,7 @@ bsw/static/Interface/EA/src/Ea.obj: R:/MyAutosar/Integrate/AutosarMemorySatck/So
 bsw/static/Interface/EA/src/Ea.obj: R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/static/interface/Ea/inc/Ea.h
 bsw/static/Interface/EA/src/Ea.obj: R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/static/Mcal/Eep/inc/Eep.h
 bsw/static/Interface/EA/src/Ea.obj: R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/gen/Eep_Cfg.h
-bsw/static/Interface/EA/src/Ea.obj: R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/static/Infrastructure/inc/MemIf_Types.h
+bsw/static/Interface/EA/src/Ea.obj: R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/static/interface/MemIf/inc/MemIf_Types.h
 bsw/static/Interface/EA/src/Ea.obj: R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/static/Mcal/Eep/inc/Eep_Types.h
 bsw/static/Interface/EA/src/Ea.obj: R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/gen/Ea_Cfg.h
 bsw/static/Interface/EA/src/Ea.obj: R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/static/Service/NvM/inc/NvM_Cbk.h
@@ -20,7 +20,7 @@ R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/static/Infrastructure/inc
 R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/static/interface/Ea/inc/Ea.h: 
 R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/static/Mcal/Eep/inc/Eep.h: 
 R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/gen/Eep_Cfg.h: 
-R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/static/Infrastructure/inc/MemIf_Types.h: 
+R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/static/interface/MemIf/inc/MemIf_Types.h: 
 R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/static/Mcal/Eep/inc/Eep_Types.h: 
 R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/gen/Ea_Cfg.h: 
 R:/MyAutosar/Integrate/AutosarMemorySatck/Software/bsw/static/Service/NvM/inc/NvM_Cbk.h: 
