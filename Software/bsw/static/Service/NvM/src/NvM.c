@@ -182,7 +182,7 @@ static void NvM_MainFunction_RestoreBlockDefaults(void) ;
 /*    Return value            : none                                                    */
 /*    Requirement             : SWS_NvM_00447                                           */
 /*    Notes                   :[SWS_NvM_00881]The Configuration pointer ConfigPtr shall */
-/*                             always have a NULL_PTR value.                            */
+/*                             always have a NULL value.                            */
 /****************************************************************************************/
 
 void NvM_Init(const NvM_ConfigType* ConfigPtr )
@@ -331,7 +331,7 @@ Std_ReturnType NvM_GetDataIndex(NvM_BlockIdType BlockId, uint8* DataIndexPtr )
      * the function NvM_GetDataIndex shall report the DET error NVM_E_PARAM_DATA
      * when a NULL pointer is passed via the parameter DataIndexPtr.
      */
-    else if(DataIndexPtr == NULL_PTR)
+    else if(DataIndexPtr == NULL)
     {
         #if(NVM_DEV_ERROR_DETECT == STD_ON)
             Det_ReportError(NVRAM_MANAGER_ID, NVRAM_MANAGER_INSTANCE, NVM_GET_DATAINDEX_API_ID ,NVM_E_PARAM_DATA) ;
@@ -391,7 +391,7 @@ Std_ReturnType NvM_GetErrorStatus( NvM_BlockIdType BlockId, NvM_RequestResultTyp
         rtn_val = E_NOT_OK ;
     }
     /*check if the input parameter pointer is  NULL*/
-    else if(RequestResultPtr == NULL_PTR)
+    else if(RequestResultPtr == NULL)
     {
         #if(NVM_DEV_ERROR_DETECT == STD_ON)
             Det_ReportError(NVRAM_MANAGER_ID, NVRAM_MANAGER_INSTANCE, NVM_GET_ERROR_STATUS_API_ID ,NVM_E_PARAM_POINTER) ;
@@ -456,7 +456,7 @@ Std_ReturnType NvM_RestoreBlockDefaults( NvM_BlockIdType BlockId, void* NvM_Dest
      * when no permanent RAM block and no explicit synchronization are configured and a
      * NULL pointer is passed via the parameter NvM_DstPtr.
      */
-    else if(NvM_DestPtr == NULL_PTR && NvMBlockDescriptor[BlockId].NvMRamBlockDataAddress == NULL_PTR )
+    else if(NvM_DestPtr == NULL && NvMBlockDescriptor[BlockId].NvMRamBlockDataAddress == NULL )
     {
         #if(NVM_DEV_ERROR_DETECT == STD_ON)
             Det_ReportError(NVRAM_MANAGER_ID, NVRAM_MANAGER_INSTANCE, NVM_RESTORE_BLOCKDEFAULTS_API_ID ,NVM_E_PARAM_ADDRESS) ;
@@ -478,8 +478,8 @@ Std_ReturnType NvM_RestoreBlockDefaults( NvM_BlockIdType BlockId, void* NvM_Dest
      * configured and the development error detection is enabled then the NvM_RestoreBlockDefaults
      * API shall report the error NVM_E_BLOCK_WITHOUT_DEFAULTS error to the Det module.k
      */
-    else if(NvMBlockDescriptor[BlockId].NvMInitBlockCallback == NULL_PTR &&\
-            NvMBlockDescriptor[BlockId].NvMRomBlockDataAddress == NULL_PTR)
+    else if(NvMBlockDescriptor[BlockId].NvMInitBlockCallback == NULL &&\
+            NvMBlockDescriptor[BlockId].NvMRomBlockDataAddress == NULL)
     {
         #if(NVM_DEV_ERROR_DETECT == STD_ON)
             Det_ReportError(NVRAM_MANAGER_ID, NVRAM_MANAGER_INSTANCE, NVM_RESTORE_BLOCKDEFAULTS_API_ID , NVM_E_BLOCK_WITHOUT_DEFAULTS ) ;
@@ -507,7 +507,7 @@ Std_ReturnType NvM_RestoreBlockDefaults( NvM_BlockIdType BlockId, void* NvM_Dest
         JobInfo.ServiceId  = NVM_RESTORE_BLOCKDEFAULTS_API_ID ;
 
         /*Check if the required RAM block is temporary or permanent*/
-        if(NvM_DestPtr != NULL_PTR )
+        if(NvM_DestPtr != NULL )
         {
             JobInfo.RAM_Ptr = (uint8*) NvM_DestPtr ;
         }
@@ -589,7 +589,7 @@ Std_ReturnType NvM_SetRamBlockResultStatus( NvM_BlockIdType BlockId, boolean Blo
         rtn_val = E_NOT_OK ;
     }
     /*Check if it's not a permanent block */
-    else if(NvMBlockDescriptor[BlockId].NvMRamBlockDataAddress == NULL_PTR)
+    else if(NvMBlockDescriptor[BlockId].NvMRamBlockDataAddress == NULL)
     {
         rtn_val = E_NOT_OK ;
     }
@@ -684,7 +684,7 @@ Std_ReturnType NvM_ReadBlock( NvM_BlockIdType BlockId, void* NvM_DstPtr )
      * when no permanent RAM block and no explicit synchronization are configured
      * and a NULL pointer is passed via the parameter NvM_DstPtr.
      */
-    else if((uint8*)NvM_DstPtr == NULL_PTR && NvMBlockDescriptor[BlockId].NvMRamBlockDataAddress == NULL_PTR )
+    else if((uint8*)NvM_DstPtr == NULL && NvMBlockDescriptor[BlockId].NvMRamBlockDataAddress == NULL )
     {
         #if(NVM_DEV_ERROR_DETECT == STD_ON)
             Det_ReportError(NVRAM_MANAGER_ID, NVRAM_MANAGER_INSTANCE, NVM_READBLOCK_API_ID ,NVM_E_PARAM_ADDRESS) ;
@@ -710,7 +710,7 @@ Std_ReturnType NvM_ReadBlock( NvM_BlockIdType BlockId, void* NvM_DstPtr )
         rtn_val = E_NOT_OK;
     }
     /*Return E_NOT_OK if the required index is in ROM and ROM address not configured*/
-    else if(dataIndex>= NvNumberOfBlocks && NvMBlockDescriptor[BlockId].NvMRomBlockDataAddress == NULL_PTR )
+    else if(dataIndex>= NvNumberOfBlocks && NvMBlockDescriptor[BlockId].NvMRomBlockDataAddress == NULL )
     {
         rtn_val = E_NOT_OK ;
     }
@@ -748,7 +748,7 @@ Std_ReturnType NvM_ReadBlock( NvM_BlockIdType BlockId, void* NvM_DstPtr )
         JobInfo.ServiceId = NVM_READBLOCK_API_ID ;
 
         /*Check if the required RAM block is temporary or permanent*/
-        if(NvM_DstPtr != NULL_PTR )
+        if(NvM_DstPtr != NULL )
         {
             JobInfo.RAM_Ptr = (uint8*) NvM_DstPtr ;
         }
@@ -777,7 +777,7 @@ Std_ReturnType NvM_ReadBlock( NvM_BlockIdType BlockId, void* NvM_DstPtr )
          * If the block has a synchronization callback (NvM_ReadRamBlockFromNvm)
          * configured the invalidation will be done just before NvMReadRamBlockFromNvM is called.
          */
-        if(NvMBlockDescriptor[BlockId].NvMRamBlockDataAddress != NULL_PTR)
+        if(NvMBlockDescriptor[BlockId].NvMRamBlockDataAddress != NULL)
         {
             AdministrativeBlock[BlockId].PRAMStatus = INVALID_UNCHANGED ;
         }
@@ -869,7 +869,7 @@ Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr )
         }
 
         /*[SWS_NvM_00900]
-         * If the function NvM_WriteBlock is provided with NULL_PTR as a RAM block address
+         * If the function NvM_WriteBlock is provided with NULL as a RAM block address
          * and it has a permanent RAM block configured then the permanent RAM block is used.
          */
         else if(NvMBlockDescriptor[BlockId].NvMRamBlockDataAddress != NULL){
@@ -877,7 +877,7 @@ Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr )
         }
 
         /*[SWS_NvM_00901]
-         * If the function NvM_WriteBlock is provided with NULL_PTR as a RAM block address
+         * If the function NvM_WriteBlock is provided with NULL as a RAM block address
          * and it has the explicit synchronization configured then the explicit synchronization is used
          */
         else if (NvMBlockDescriptor[BlockId].NvMBlockUseSyncMechanism == TRUE){
@@ -1282,7 +1282,7 @@ static void NvM_MainFunction_ReadBlock(void)
 /********************case : READ_ROM_BLOCK*******************/
     case READ_ROM_BLOCK :
         /*Check if ROM block address is  configured*/
-        if(NvMBlockDescriptor[Current_Job.Block_Id].NvMRomBlockDataAddress != NULL_PTR )
+        if(NvMBlockDescriptor[Current_Job.Block_Id].NvMRomBlockDataAddress != NULL )
         {
             Length    = NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength ;
             dataIndex = AdministrativeBlock[Current_Job.Block_Id].DataSetIndex ;
@@ -1312,7 +1312,7 @@ static void NvM_MainFunction_ReadBlock(void)
         }
 
         /*Check if NvMInitBlockCallback is  configured */
-        else if(NvMBlockDescriptor[Current_Job.Block_Id].NvMInitBlockCallback != NULL_PTR)
+        else if(NvMBlockDescriptor[Current_Job.Block_Id].NvMInitBlockCallback != NULL)
         {
             rtn_val=NvMBlockDescriptor[Current_Job.Block_Id].NvMInitBlockCallback();
 
@@ -1382,7 +1382,7 @@ static void NvM_MainFunction_ReadBlock(void)
 /********************case : END_JOB*******************/
     case END_JOB:
         /*Check if single block call back is configured */
-        if(NvMBlockDescriptor[Current_Job.Block_Id].NvMSingleBlockCallback != NULL_PTR)
+        if(NvMBlockDescriptor[Current_Job.Block_Id].NvMSingleBlockCallback != NULL)
         {
             NvMBlockDescriptor[Current_Job.Block_Id].\
             NvMSingleBlockCallback(Current_Job.ServiceId,\
@@ -1669,7 +1669,7 @@ static void NvM_MainFunction_RestoreBlockDefaults(void)
     switch(Current_State)
     {
         case RESTORE_FROM_ROM :
-            if(NULL_PTR != NvMBlockDescriptor[BlockId].NvMRomBlockDataAddress)
+            if(NULL != NvMBlockDescriptor[BlockId].NvMRomBlockDataAddress)
             {
                 /*Get Rom block address
                  *RomAddress = First blockAdress +(index*Block Length)
@@ -2121,7 +2121,7 @@ static void NvM_MainFunction_ReadAll(void)
     {
         /*Check if block is configured to be used in the ReadAll Request*/
         if(NvMBlockDescriptor[block_counter].NvMSelectBlockForReadAll &&\
-           NvMBlockDescriptor[block_counter].NvMRamBlockDataAddress != NULL_PTR &&
+           NvMBlockDescriptor[block_counter].NvMRamBlockDataAddress != NULL &&
            NvMBlockDescriptor[block_counter].NvMBlockManagement != NVM_BLOCK_DATASET)
         {
             switch(MultiBlcokRequest.Internal_state)
@@ -2187,7 +2187,7 @@ static void NvM_MainFunction_ReadAll(void)
             /********************case : READ_ROM_BLOCK*******************/
                 case READ_ROM_BLOCK :
                     /*Check if ROM block address is  configured*/
-                    if(NvMBlockDescriptor[block_counter].NvMRomBlockDataAddress != NULL_PTR )
+                    if(NvMBlockDescriptor[block_counter].NvMRomBlockDataAddress != NULL )
                     {
                         ReadRomBlock(NvMBlockDescriptor[block_counter].NvMRomBlockDataAddress ,\
                                      NvMBlockDescriptor[block_counter].NvMRamBlockDataAddress , \
@@ -2201,7 +2201,7 @@ static void NvM_MainFunction_ReadAll(void)
                          AdministrativeBlock[block_counter].PRAMStatus = VALID_CHANGED ;
                     }
                     /*Check if NvMInitBlockCallback is  configured */
-                    else if(NvMBlockDescriptor[block_counter].NvMInitBlockCallback != NULL_PTR)
+                    else if(NvMBlockDescriptor[block_counter].NvMInitBlockCallback != NULL)
                     {
                         rtn_val = NvMBlockDescriptor[block_counter].NvMInitBlockCallback();
 
@@ -2237,7 +2237,7 @@ static void NvM_MainFunction_ReadAll(void)
 /********************case : END_JOB*******************/
                 case END_JOB:
                     /*Check if single block call back is configured */
-                    if(NvMBlockDescriptor[block_counter].NvMSingleBlockCallback != NULL_PTR)
+                    if(NvMBlockDescriptor[block_counter].NvMSingleBlockCallback != NULL)
                     {
                         NvMBlockDescriptor[block_counter].\
                         NvMSingleBlockCallback(MultiBlcokRequest.request,\
@@ -2289,7 +2289,7 @@ static void NvM_MainFunction_CalcCRC(void)
         /*Remove current CRC job from queue*/
         CRCJob_Dequeue();
 
-        if(NvMBlockDescriptor[blockId].NvMSingleBlockCallback != NULL_PTR )
+        if(NvMBlockDescriptor[blockId].NvMSingleBlockCallback != NULL )
         {
             NvMBlockDescriptor[blockId].NvMSingleBlockCallback(NVM_SET_RAMBLOCK_STATUS_API_ID,NVM_REQ_OK) ;
         }

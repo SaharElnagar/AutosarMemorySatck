@@ -334,7 +334,7 @@ Std_ReturnType Fee_Write( uint16 BlockNumber, const uint8* DataBufferPtr )
    * the function Fee_Write shall reject the write request, raise the development error FEE_E_PARAM_POINTER
    * and return with E_NOT_OK.
    */
-  else if(DataBufferPtr == NULL_PTR)
+  else if(DataBufferPtr == NULL)
   {
       #if (FeeDevErrorDetect == STD_ON)
           Det_ReportError(FEE_MODULE_ID, FEE_0_INSTANCE_ID, FEE_WRITE_API_ID, FEE_E_PARAM_POINTER);

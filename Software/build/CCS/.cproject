@@ -50,6 +50,7 @@
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/static/Mcal/Flash/inc"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/static/Service/NvM/inc"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/static/interface/Fee/inc"/>
+									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/static/interface/Ea/inc"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/static/Infrastructure/inc"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/gen"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}/../../bsw/static/Infrastructure/platform/inc"/>

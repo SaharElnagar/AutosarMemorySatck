@@ -113,9 +113,11 @@ PDE_DEPS__QUOTED :=
 SUBDIRS := \
 . \
 bsw/gen \
+bsw/static/Infrastructure/platform/src \
 bsw/static/Interface/EA/src \
 bsw/static/Interface/FEE/src \
 bsw/static/Interface/MemIf/src \
+bsw/static/Mcal/Eep/src \
 bsw/static/Mcal/Flash/src \
 bsw/static/Service/NvM/src \
 bsw/stub \
