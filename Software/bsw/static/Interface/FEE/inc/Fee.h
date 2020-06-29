@@ -21,59 +21,57 @@
 #include "Fee_Cfg.h"
 
 /*******************************************************************************/
-//			Macro Definitions
+//          Macro Definitions
 /*******************************************************************************/
-#define FIRST_BLOCK_NUM						      (1U)
 
 
 /*******************************************************************************/
-//			Development Errors' IDs
+//          Development Errors' IDs
 /*******************************************************************************/
-#define FEE_E_UNINIT 		 							  0x01
-#define FEE_E_INVALID_BLOCK_NO				  0x02
-#define FEE_E_INVALID_BLOCK_OFS				  0x03
-#define FEE_E_PARAM_POINTER						  0x04
-#define FEE_E_INVALID_BLOCK_LEN				  0x05
-#define FEE_E_INIT_FAILED							  0x09
+#define FEE_E_UNINIT                          0x01
+#define FEE_E_INVALID_BLOCK_NO                0x02
+#define FEE_E_INVALID_BLOCK_OFS               0x03
+#define FEE_E_PARAM_POINTER                   0x04
+#define FEE_E_INVALID_BLOCK_LEN               0x05
+#define FEE_E_INIT_FAILED                     0x09
 
 /*******************************************************************************/
-//			Runtime Errors' IDs
+//          Runtime Errors' IDs
 /*******************************************************************************/
-#define FEE_E_BUSY										  0x06
-#define FEE_E_INVALID_CANCEL					  0x08
+#define FEE_E_BUSY                            0x06
+#define FEE_E_INVALID_CANCEL                  0x08
 
 /*******************************************************************************/
-//			Module ID
+//          Module ID
 /*******************************************************************************/
-#define FEE_MODULE_ID										(21U)
+#define FEE_MODULE_ID                         (21U)
 
 /*******************************************************************************/
-//			Instance ID
+//          Instance ID
 /*******************************************************************************/
-#define FEE_INSTANCE_ID          	  		0
+#define FEE_0_INSTANCE_ID                     (0U)
 
 /*******************************************************************************/
-//			FEE APIs IDs
+//          FEE APIs IDs
 /*******************************************************************************/
-#define FEE_INIT_API_ID								  0x00
-#define FEE_SETMODE_API_ID						  0x01
-#define FEE_READ_API_ID								  0x02
-#define FEE_WRITE_API_ID							  0x03
-#define FEE_CANCEL_API_ID							  0x04
-#define FEE_GETSTATUS_API_ID					  0x05
-#define FEE_GETJOBRESULT_API_ID				  0x06
-#define FEE_INVALIDATEBLOCK_API_ID		  0x07
-#define FEE_GETVERSIONINFO_API_ID			  0x08
-#define FEE_ERASEIMMEDIATEBLOCK_API_ID  0x09
-#define FEE_JOBENDNOTIFICATION_API_ID	  0x10
-#define FEE_JOBERRORNOTIFICATION_API_ID 0x11
-#define FEE_MAIN_API_ID									0x12
+#define FEE_INIT_API_ID                           0x00
+#define FEE_SETMODE_API_ID                        0x01
+#define FEE_READ_API_ID                           0x02
+#define FEE_WRITE_API_ID                          0x03
+#define FEE_CANCEL_API_ID                         0x04
+#define FEE_GETSTATUS_API_ID                      0x05
+#define FEE_GETJOBRESULT_API_ID                   0x06
+#define FEE_INVALIDATEBLOCK_API_ID                0x07
+#define FEE_GETVERSIONINFO_API_ID                 0x08
+#define FEE_ERASEIMMEDIATEBLOCK_API_ID            0x09
+#define FEE_JOBENDNOTIFICATION_API_ID             0x10
+#define FEE_JOBERRORNOTIFICATION_API_ID           0x11
+#define FEE_MAIN_API_ID                           0x12
 
 
 
 typedef struct{
 
-	
 
 }Fee_ConfigType;
 
@@ -91,8 +89,6 @@ Std_ReturnType Fee_EraseImmediateBlock( uint16 BlockNumber );
 void Fee_JobEndNotification( void );
 void Fee_JobErrorNotification( void );
 void Fee_MainFunction( void );
-
-
 
 #endif
 

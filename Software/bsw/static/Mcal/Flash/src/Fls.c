@@ -39,9 +39,19 @@
 /*                                   Local Macro Definition                              */
 /*****************************************************************************************/
 #define NVIC_EN0_INT29      0x20000000  // Interrupt 29 enable "Flash control interrupt"
-#define SECTOR_WORDS		    255
-#define ERASED_BYTE					0xFF
-#define ERASED_WORD					0xFFFFFFFF
+#define SECTOR_WORDS		255
+#define ERASED_BYTE			0xFF
+#define ERASED_WORD			0xFFFFFFFF
+
+
+#define MAINFUNCTION_SYNCHRONOUS_MODE            STD_OFF
+
+/*Internal states to handle asynchronous main functions*/
+#define FLS_WRITE_WORDS         0x00
+#define FLS_END_JOB             0x01
+#define FLS_FAILED_JOB          0x02
+#define FLS_READ_WORD           0x03
+#define FLS_ERASE_SECTOR        0x04
 
 /*****************************************************************************************/
 /*                            Local Variables' Definition                                  */
@@ -52,19 +62,18 @@ static Fls_AddressType FlsJob_FlsAddress;
 static Fls_LengthType FlsJob_Length = 1;
 static uint8* FlsJob_DataBufferAddPtr;
 
-static uint16 i = 0;
-static uint8 j = 0;
-static boolean End_Job_Flag = 0;
+//static uint16 i = 0;
+//static uint8 j = 0;
+//static boolean End_Job_Flag = 0;
 
 
 /*****************************************************************************************/
 /*                          Module Status variables                                      */
 /*****************************************************************************************/
 static MemIf_StatusType Module_Status = MEMIF_UNINIT;
-static MemIf_JobResultType Job_Result;
-static Std_ReturnType Function_Error;
-static JOB_PENDING_TYPE Fls_PENDING_JOB;
-
+static MemIf_JobResultType Job_Result               ;
+static JOB_PENDING_TYPE Fls_PENDING_JOB             ;
+static uint8 InternalState = 0;
 
 /*****************************************************************************************/
 /*                                   Local Function Declaration                          */
@@ -90,23 +99,22 @@ static void Fls_Compare_AC(void);
 *												 Called by Fls_MainFunction when a write job is pending          *
 ******************************************************************************************/
 static void Fls_Write_AC(void){
-		
+#if(MAINFUNCTION_SYNCHRONOUS_MODE == STD_ON)
 		#if (FlsWriteVerificationEnabled == STD_ON)
-				
 				// save job parameters before processing the write job
 				Fls_AddressType Compare_Address = FlsJob_FlsAddress;
 				Fls_LengthType Compare_length = FlsJob_Length;
 				uint8* Compare_data = FlsJob_DataBufferAddPtr;
-				
 		#endif
-	
+				
+        /*Get the boundries of the required place to write data in*/
 		Fls_AddressType Start_Sector_Add = FlsJob_FlsAddress;
 		Fls_AddressType End_Sector_Add = FlsJob_FlsAddress + FlsJob_Length;
 	
-		while(Start_Sector_Add % FlsSectorSize != 0){
+		while(Start_Sector_Add % FlsSectorSize != 0){           /*Get the statr address of that sector*/
 				Start_Sector_Add = Start_Sector_Add - FlsPageSize;
 		}
-		while(End_Sector_Add % FlsSectorSize != 0){
+		while(End_Sector_Add % FlsSectorSize != 0){             /*We could have simply added the sector size to the start address*/
 				End_Sector_Add = End_Sector_Add + FlsPageSize;
 		}
 		
@@ -157,7 +165,7 @@ static void Fls_Write_AC(void){
 							
 							if(Byte_Buffer != ERASED_BYTE){
 									Job_Result = MEMIF_JOB_FAILED;
-									Function_Error = Det_ReportRuntimeError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_VERIFY_ERASE_FAILED);
+									 Det_ReportRuntimeError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_VERIFY_ERASE_FAILED);
 							}
 						}
 		
@@ -217,7 +225,7 @@ static void Fls_Write_AC(void){
 						{
 							 HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC  | FLASH_FCMISC_INVDMISC | FLASH_FCMISC_PROGMISC;
 							 Job_Result = MEMIF_JOB_FAILED;
-							 Function_Error = Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_WRITE_FAILED);
+							  Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_WRITE_FAILED);
 						}
 					#endif
 				}
@@ -235,7 +243,7 @@ static void Fls_Write_AC(void){
 					
 					if(Byte_buffer != *Compare_data++){
 							Job_Result = MEMIF_JOB_FAILED;
-							Function_Error = Det_ReportRuntimeError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_VERIFY_WRITE_FAILED);
+							 Det_ReportRuntimeError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_VERIFY_WRITE_FAILED);
 					}
 				}
 					
@@ -250,6 +258,41 @@ static void Fls_Write_AC(void){
 					
 			#endif
 		#endif
+#else
+static uint32 WordCounter = 0;
+/*************************Asynchronous Mode********************/
+    switch(InternalState)
+    {
+        case FLS_WRITE_WORDS :
+            if(WordCounter < FlsJob_Length)
+            {
+                HWREG(FLASH_FMA) = FlsJob_FlsAddress + WordCounter;
+                HWREG(FLASH_FMD) = *(uint32 *)(FlsJob_DataBufferAddPtr + WordCounter);
+                HWREG(FLASH_FMC) = FLASH_FMC_WRKEY | FLASH_FMC_WRITE;
+
+               //
+               // Wait until the flash has been programmed.
+               //
+               while(HWREG(FLASH_FMC) & FLASH_FMC_WRITE)
+               {
+               }
+               WordCounter+=4;
+            }
+            else
+            {
+                /*go to End job state*/
+                InternalState = FLS_END_JOB ;
+            }
+        break;
+        case FLS_END_JOB :
+            /*Set end jobs flags*/
+            Job_Result = MEMIF_JOB_OK ;
+            Module_Status = MEMIF_IDLE ;
+            Fls_ConfigPtr->FlsJobEndNotification();
+            Fls_PENDING_JOB = NO_JOB ;
+        break;
+    }
+#endif
 }
 
 
@@ -268,38 +311,52 @@ static void Fls_Erase_AC(void){
 				
 		#endif
 		
-		while( FlsJob_Length ){
-				
-				if(FlsJob_Length == FlsSectorSize){
-						End_Job_Flag = 1;
-				}
-				
-				// Erase the block
-				HWREG(FLASH_FMA) = FlsJob_FlsAddress;
-				HWREG(FLASH_FMC) = FLASH_FMC_WRKEY | FLASH_FMC_ERASE;
-				
-				// Wait until the block has been erased 
-				while(HWREG(FLASH_FMC) & FLASH_FMC_ERASE)
-				{
-				}
-				
-				#if (FlsUseInterrupts == STD_OFF)
-					
-					// Check if an access violation or erase error occurred
-					if(HWREG(FLASH_FCRIS) & (FLASH_FCRIS_ARIS | FLASH_FCRIS_VOLTRIS |
-																	 FLASH_FCRIS_ERRIS))
-					{
-							HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC  | FLASH_FCMISC_ERMISC; 
-							Job_Result = MEMIF_JOB_FAILED;
-							Function_Error = Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_ERASE_FAILED);
-					}	
-				
-				#endif
-				
-				FlsJob_FlsAddress += FlsSectorSize;
-				FlsJob_Length -= FlsSectorSize;
-				
-		}
+	switch (InternalState)
+	{
+        case FLS_ERASE_SECTOR:
+
+           if( FlsJob_Length )
+            {
+                // Erase the block
+                HWREG(FLASH_FMA) = FlsJob_FlsAddress;
+                HWREG(FLASH_FMC) = FLASH_FMC_WRKEY | FLASH_FMC_ERASE;
+
+                // Wait until the block has been erased
+                while(HWREG(FLASH_FMC) & FLASH_FMC_ERASE)
+                {
+                }
+                #if (FlsUseInterrupts == STD_OFF)
+                  // Check if an access violation or erase error occurred
+                   if(HWREG(FLASH_FCRIS) & (FLASH_FCRIS_ARIS | FLASH_FCRIS_VOLTRIS | FLASH_FCRIS_ERRIS))
+                   {
+                       HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC  | FLASH_FCMISC_ERMISC;
+                       Job_Result = MEMIF_JOB_FAILED;
+                       Module_Status = MEMIF_IDLE ;
+                       Fls_PENDING_JOB = NO_JOB ;
+                       if( Fls_ConfigPtr->FlsJobErrorNotification != NULL)
+                       {
+                           Fls_ConfigPtr->FlsJobErrorNotification();
+                       }
+                   }
+                #endif
+                FlsJob_FlsAddress += FlsSectorSize;
+                FlsJob_Length -= FlsSectorSize;
+            }
+           else
+           {
+               Job_Result = MEMIF_JOB_OK  ;
+               InternalState = FLS_END_JOB ;
+           }
+        break;
+        case FLS_END_JOB:
+            Module_Status = MEMIF_IDLE ;
+            Fls_PENDING_JOB = NO_JOB ;
+            if(Job_Result != MEMIF_JOB_FAILED && Fls_ConfigPtr->FlsJobEndNotification != NULL)
+            {
+                Fls_ConfigPtr->FlsJobEndNotification();
+            }
+        break;
+    }
 			
 		#if (FlsEraseVerificationEnabled == STD_ON)
 		
@@ -313,21 +370,11 @@ static void Fls_Erase_AC(void){
 
 						if(Word_Buffer != ERASED_WORD){
 								Job_Result = MEMIF_JOB_FAILED;
-								Function_Error = Det_ReportRuntimeError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_VERIFY_ERASE_FAILED);
+								 Det_ReportRuntimeError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_VERIFY_ERASE_FAILED);
 						}
 				}
 				
 			#endif
-				
-		#if (FlsUseInterrupts == STD_OFF)
-			#if (FlsJobEndNotificationEnable == STD_ON)
-					
-					if(Job_Result != MEMIF_JOB_FAILED && Fls_ConfigPtr->FlsJobEndNotification != NULL){
-							Fls_ConfigPtr->FlsJobEndNotification();
-					}
-					
-			#endif
-		#endif
 				
 }
 
@@ -337,27 +384,37 @@ static void Fls_Erase_AC(void){
 * Function Description : Performs processing of read job Access code.									   *
 *												 Called by Fls_MainFunction when a read job is pending.          *
 ******************************************************************************************/
-static void Fls_Read_AC(void){
-		
-		while(FlsJob_Length){
-				
-				*FlsJob_DataBufferAddPtr++ = (*(uint8 *)FlsJob_FlsAddress++);
-				FlsJob_Length--;
-			
-				// Check if an error occurred while read
-				if(HWREG(FLASH_FCRIS) & (FLASH_FCRIS_ARIS | FLASH_FCRIS_VOLTRIS)){
-						HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC;
-						Job_Result = MEMIF_JOB_FAILED;
-						Function_Error = Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_READ_FAILED);
-				}
-		}
-		#if (FlsJobEndNotificationEnable == STD_ON)
-					
-				if(Job_Result != MEMIF_JOB_FAILED && Fls_ConfigPtr->FlsJobEndNotification != NULL){
-						Fls_ConfigPtr->FlsJobEndNotification();
-				}
-					
-		#endif
+static void Fls_Read_AC(void)
+{
+    if(FlsJob_Length)
+    {
+        *FlsJob_DataBufferAddPtr++ = (*(uint8 *)FlsJob_FlsAddress++);
+        FlsJob_Length--;
+
+        // Check if an error occurred while read
+        if(HWREG(FLASH_FCRIS) & (FLASH_FCRIS_ARIS | FLASH_FCRIS_VOLTRIS))
+        {
+                HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC;
+                Job_Result = MEMIF_JOB_FAILED;
+                Module_Status = MEMIF_IDLE ;
+                Fls_PENDING_JOB = NO_JOB ;
+                Fls_ConfigPtr->FlsJobErrorNotification();
+        }
+    }
+    if(FlsJob_Length == 0)
+    {
+        #if (FlsJobEndNotificationEnable == STD_ON)
+
+            if(Job_Result != MEMIF_JOB_FAILED && Fls_ConfigPtr->FlsJobEndNotification != NULL)
+            {
+                    Job_Result = MEMIF_JOB_OK;
+                    Module_Status = MEMIF_IDLE ;
+                    Fls_ConfigPtr->FlsJobEndNotification();
+                    Fls_PENDING_JOB = NO_JOB ;
+            }
+
+        #endif
+    }
 }
 
 
@@ -383,7 +440,7 @@ static void Fls_Compare_AC(void){
 				if(HWREG(FLASH_FCRIS) & (FLASH_FCRIS_ARIS | FLASH_FCRIS_VOLTRIS)){
 						HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC;
 						Job_Result = MEMIF_JOB_FAILED;
-						Function_Error = Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_COMPARE_FAILED);
+						 Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_COMPARE_FAILED);
 				}
 		}
 		#if (FlsJobEndNotificationEnable == STD_ON)
@@ -419,7 +476,7 @@ static void Fls_BlankCheck_AC(void){
 				if(HWREG(FLASH_FCRIS) & (FLASH_FCRIS_ARIS | FLASH_FCRIS_VOLTRIS)){
 						HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC;
 						Job_Result = MEMIF_JOB_FAILED;
-						Function_Error = Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_COMPARE_FAILED);
+						 Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_COMPARE_FAILED);
 				}
 		}
 		
@@ -467,7 +524,6 @@ void Fls_Init( const Fls_ConfigType* ConfigPtr ){
 	Fls_ConfigPtr = (Fls_ConfigType *)ConfigPtr;
 	Module_Status = MEMIF_IDLE;
 	Job_Result = MEMIF_JOB_OK;
-	Function_Error = E_OK;
 	Fls_PENDING_JOB = NO_JOB;
 	
 	#if (FlsUseInterrupts == STD_ON)
@@ -478,16 +534,16 @@ void Fls_Init( const Fls_ConfigType* ConfigPtr ){
 
 
 /*****************************************************************************************
-* Function Description : erase one or more complete flash sectors.											 *
-*												 copy the given parameters to FLS module internal variables      *
-*												 and initiate an erase job.                                      *
-*																																												 *
-*	Param: TargetAddress Is flash memory address offset. 																	 *
-*        it will be added to flash memory base address.                                  *
-*				 It must be alligned to a flash sector boundary.																 *
-*																																												 *
-* Param: Length Is Number of bytes to erase.	 																					 *
-*				 It must be alligned to a flash sector boundary.																 *
+* Function Description : erase one or more complete flash sectors.
+*												 copy the given parameters to FLS module internal variables
+*												 and initiate an erase job.
+*
+*	Param: TargetAddress Is flash memory address offset.
+*        it will be added to flash memory base address.
+*				 It must be alligned to a flash sector boundary.
+*
+* Param: Length Is Number of bytes to erase.
+*				 It must be alligned to a flash sector boundary.
 ******************************************************************************************/
 Std_ReturnType Fls_Erase( Fls_AddressType TargetAddress, Fls_LengthType Length ){
 
@@ -498,23 +554,23 @@ Std_ReturnType Fls_Erase( Fls_AddressType TargetAddress, Fls_LengthType Length )
 		#if (FlsDevErrorDetect == STD_ON)
 		
 				if(Module_Status == MEMIF_UNINIT){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_UNINIT);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_UNINIT);
 						return E_NOT_OK;
 				}
 				
 				if(Module_Status == MEMIF_BUSY){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_BUSY);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_BUSY);
 						return E_NOT_OK;
 				}
 				
 				if(((TargetAddress + FlsBaseAddress) % FlsSectorSize != 0) || (TargetAddress > FlsTotalSize - 1)){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_PARAM_ADDRESS);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_PARAM_ADDRESS);
 						return E_NOT_OK;
 				}
 					
 				if(Length <= 0 || (TargetAddress + Length > FlsTotalSize) || ((TargetAddress + Length) % FlsSectorSize != 0)){
 			
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_PARAM_LENGTH);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_ERASE_API_ID, FLS_E_PARAM_LENGTH);
 						return E_NOT_OK;
 				}
 				
@@ -523,7 +579,7 @@ Std_ReturnType Fls_Erase( Fls_AddressType TargetAddress, Fls_LengthType Length )
 		
 		FlsJob_FlsAddress = TargetAddress;
 		FlsJob_Length = Length;
-				
+		InternalState = FLS_ERASE_SECTOR ;
 		Fls_PENDING_JOB = ERASE_JOB;
 		Module_Status = MEMIF_BUSY;
 		Job_Result = MEMIF_JOB_PENDING;
@@ -533,17 +589,17 @@ Std_ReturnType Fls_Erase( Fls_AddressType TargetAddress, Fls_LengthType Length )
 }
 
 /*****************************************************************************************
-* Function Description : write one or more complete flash pages to the flash device.		 *
-*												 copy the given parameters to Fls module internal variables      *
-*												 and initiate a write job.                                       *
-*	Param: TargetAddress Is falsh memory address offset.                                   *
-*        it will be added to flash memory base address.                                  *
-*				 It must be alligned to a flash page boundary.																   *
+* Function Description : write one or more complete flash pages to the flash device.
+*												 copy the given parameters to Fls module internal variables
+*												 and initiate a write job.
+*	Param: TargetAddress Is falsh memory address offset.
+*        it will be added to flash memory base address.
+*				 It must be alligned to a flash page boundary.
 *																																												 *
-* Param: SourceAddressPtr Is Pointer to source data buffer.															 *
+* Param: SourceAddressPtr Is Pointer to source data buffer.
 *																																												 *
-* Param: Length Is Number of bytes to write.	 																					 *
-*				 It must be alligned to a flash page boundary.																   *
+* Param: Length Is Number of bytes to write.
+*				 It must be alligned to a flash page boundary.
 ******************************************************************************************/
 Std_ReturnType Fls_Write( Fls_AddressType TargetAddress, const uint8* SourceAddressPtr, Fls_LengthType Length ){
 		
@@ -551,37 +607,37 @@ Std_ReturnType Fls_Write( Fls_AddressType TargetAddress, const uint8* SourceAddr
 		#if (FlsDevErrorDetect == STD_ON)
 	
 				if(Module_Status == MEMIF_UNINIT){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_UNINIT);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_UNINIT);
 						return E_NOT_OK;
 				}
 				
 				if(Module_Status == MEMIF_BUSY){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_BUSY);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_BUSY);
 						return E_NOT_OK;
 				}
 				
 				if(((TargetAddress + FlsBaseAddress) % FlsPageSize != 0) || (TargetAddress > FlsTotalSize - 1)){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_PARAM_ADDRESS);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_PARAM_ADDRESS);
 						return E_NOT_OK;
 				}
 				
 				if(Length <= 0 || (TargetAddress + Length > FlsTotalSize) || ((TargetAddress + Length) % FlsPageSize != 0)){
 			
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_PARAM_LENGTH);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_PARAM_LENGTH);
 						return E_NOT_OK;
 				}
 				
 				if(SourceAddressPtr == NULL){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_PARAM_DATA);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_WRITE_API_ID, FLS_E_PARAM_DATA);
 						return E_NOT_OK;
 				}
 				
 		#endif
 		
 		FlsJob_FlsAddress = TargetAddress;
-	  FlsJob_DataBufferAddPtr = (uint8 *)SourceAddressPtr;
+		FlsJob_DataBufferAddPtr = (uint8 *)SourceAddressPtr;
 		FlsJob_Length = Length;
-	
+		InternalState = FLS_WRITE_WORDS ;
 		Fls_PENDING_JOB = WRITE_JOB;
 		Module_Status = MEMIF_BUSY;
 		Job_Result = MEMIF_JOB_PENDING;
@@ -602,7 +658,7 @@ void Fls_Cancel( void ){
 	
 		#if (FlsDevErrorDetect == STD_ON)
 				if(Module_Status == MEMIF_UNINIT){
-					Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_CANCEL_API_ID, FLS_E_UNINIT);
+					 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_CANCEL_API_ID, FLS_E_UNINIT);
 					return;
 				}
 		#endif
@@ -653,7 +709,7 @@ MemIf_JobResultType Fls_GetJobResult( void ){
 	
 		#if (FlsDevErrorDetect == STD_ON)
 				if(Module_Status == MEMIF_UNINIT){
-					Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_GETJOBRESULT_API_ID, FLS_E_UNINIT);
+					 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_GETJOBRESULT_API_ID, FLS_E_UNINIT);
 					return MEMIF_JOB_FAILED;
 				}
 		#endif
@@ -681,27 +737,27 @@ Std_ReturnType Fls_Read( Fls_AddressType SourceAddress, uint8* TargetAddressPtr,
 		#if (FlsDevErrorDetect == STD_ON)
 	
 				if(Module_Status == MEMIF_UNINIT){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_UNINIT);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_UNINIT);
 						return E_NOT_OK;
 				}
 				
 				if(Module_Status == MEMIF_BUSY){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_BUSY);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_BUSY);
 						return E_NOT_OK;
 				}
 				
 				if (SourceAddress > (FlsTotalSize - 1)){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_PARAM_ADDRESS);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_PARAM_ADDRESS);
 						return E_NOT_OK;
 				}
 				
 				if(Length <= 0 || (SourceAddress + Length > FlsTotalSize)){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_PARAM_LENGTH);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_PARAM_LENGTH);
 						return E_NOT_OK;
 				}
 				
 				if(TargetAddressPtr == NULL){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_PARAM_DATA);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_READ_API_ID, FLS_E_PARAM_DATA);
 						return E_NOT_OK;
 				}
 		#endif
@@ -709,7 +765,7 @@ Std_ReturnType Fls_Read( Fls_AddressType SourceAddress, uint8* TargetAddressPtr,
 		FlsJob_FlsAddress = SourceAddress;
 		FlsJob_DataBufferAddPtr = TargetAddressPtr;
 		FlsJob_Length = Length;
-	
+		InternalState = FLS_READ_WORD ;
 		Fls_PENDING_JOB = READ_JOB;
 		Module_Status = MEMIF_BUSY;
 		Job_Result = MEMIF_JOB_PENDING;
@@ -738,27 +794,27 @@ Std_ReturnType Fls_Compare( Fls_AddressType SourceAddress, const uint8* TargetAd
 		#if (FlsDevErrorDetect == STD_ON)
 	
 				if(Module_Status == MEMIF_UNINIT){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_UNINIT);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_UNINIT);
 						return E_NOT_OK;
 				}
 				
 				if(Module_Status == MEMIF_BUSY){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_BUSY);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_BUSY);
 						return E_NOT_OK;
 				}
 				
 				if(SourceAddress > FlsTotalSize - 1){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_PARAM_ADDRESS);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_PARAM_ADDRESS);
 						return E_NOT_OK;
 				}
 				
 				if(Length <= 0 || (SourceAddress + Length > FlsTotalSize)){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_PARAM_LENGTH);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_PARAM_LENGTH);
 						return E_NOT_OK;
 				}
 				
 				if(TargetAddressPtr == NULL){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_PARAM_DATA);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_COMPARE_API_ID, FLS_E_PARAM_DATA);
 						return E_NOT_OK;
 				}
 		#endif
@@ -791,7 +847,7 @@ void Fls_SetMode( MemIf_ModeType Mode ){
 	
 		#if (FlsDevErrorDetect == STD_ON)
 				if(Module_Status == MEMIF_BUSY){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_SETMODE_API_ID, FLS_E_BUSY);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_SETMODE_API_ID, FLS_E_BUSY);
 						return;
 				}
 		#endif
@@ -811,7 +867,7 @@ void Fls_GetVersionInfo( Std_VersionInfoType* VersioninfoPtr ){
 
 		#if (FlsDevErrorDetect == STD_ON)
 				if(VersioninfoPtr == NULL){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_GETVERSIONINFO_API_ID, FLS_E_PARAM_POINTER);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_GETVERSIONINFO_API_ID, FLS_E_PARAM_POINTER);
 						return;
 				}
 		#endif
@@ -840,23 +896,23 @@ Std_ReturnType Fls_BlankCheck( Fls_AddressType TargetAddress, Fls_LengthType Len
 		#if (FlsDevErrorDetect == STD_ON)
 		
 				if(Module_Status == MEMIF_UNINIT){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_UNINIT);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_UNINIT);
 						return E_NOT_OK;
 				}
 				
 				if(Module_Status == MEMIF_BUSY){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_BUSY);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_BUSY);
 						return E_NOT_OK;
 				}
 				
 				if(TargetAddress > FlsTotalSize - 1){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_PARAM_ADDRESS);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_PARAM_ADDRESS);
 						return E_NOT_OK;
 				}
 					
 				if(Length <= 0 || (TargetAddress + Length > FlsTotalSize)){
 			
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_PARAM_LENGTH);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_PARAM_LENGTH);
 						return E_NOT_OK;
 				}
 				
@@ -884,13 +940,13 @@ Std_ReturnType Fls_BlankCheck( Fls_AddressType TargetAddress, Fls_LengthType Len
 *												 Fls_MainFunction cyclically.                                    *
 ******************************************************************************************/
 void Fls_MainFunction( void ){
-	
+
+
 		#if (FlsDevErrorDetect == STD_ON)
 				
 				if(Module_Status == MEMIF_UNINIT){
-						Function_Error = Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_UNINIT);
+						 Det_ReportError(FLASH_DRIVER_ID, INSTANCE_ID, FLS_BLANKCHECK_API_ID, FLS_E_UNINIT);
 				}
-	
 		#endif
 	
 		if(Job_Result == MEMIF_JOB_PENDING){
@@ -952,7 +1008,7 @@ void Fls_MainFunction( void ){
 				{
 					 HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC  | FLASH_FCMISC_INVDMISC | FLASH_FCMISC_PROGMISC; 
 					 Job_Result = MEMIF_JOB_FAILED;
-					 Function_Error = Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_WRITE_FAILED);
+					  Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_WRITE_FAILED);
 				}
 				
 				if(End_Job_Flag == 1){
@@ -978,7 +1034,7 @@ void Fls_MainFunction( void ){
 				{
 						HWREG(FLASH_FCMISC) |= FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC  | FLASH_FCMISC_ERMISC; 
 						Job_Result = MEMIF_JOB_FAILED;
-						Function_Error = Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_ERASE_FAILED);
+						 Det_ReportTransientFault(FLASH_DRIVER_ID, INSTANCE_ID, FLS_MAIN_API_ID, FLS_E_ERASE_FAILED);
 				}
 				if(End_Job_Flag == 1){
 						End_Job_Flag = 0;

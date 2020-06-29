@@ -40,16 +40,16 @@
 #define FlsDriverIndex	
 
 //Compile switch to enable erase verification
-#define FlsEraseVerificationEnabled				STD_ON
+#define FlsEraseVerificationEnabled				        STD_OFF
 
 //Compile switch to enable and disable the Fls_GetJobResult function.
 #define FlsGetJobResultApi								STD_ON
 
 //Compile switch to enable and disable the Fls_GetStatus function
-#define FlsGetStatusApi										STD_ON
+#define FlsGetStatusApi									STD_ON
 
 //Compile switch to enable and disable the Fls_SetMode function
-#define FlsSetModeApi											STD_ON
+#define FlsSetModeApi									STD_ON
 
 //Compile switch to enable timeout supervision
 #define FlsTimeoutSupervisionEnabled 			STD_ON
@@ -61,7 +61,7 @@
 false: Job processing not triggered by interrupt (software controlled)
 or the underlying hardware does not support interrupt mode for flash operations
 */
-#define FlsUseInterrupts 									STD_ON
+#define FlsUseInterrupts 									STD_OFF
 
 //switch to enable / disable the API to read out the modules version information
 #define FlsVersionInfoApi									STD_ON
@@ -113,7 +113,7 @@ or the underlying hardware does not support interrupt mode for flash operations
 #define FlsPageSize											 0x00000004
 
 //Size of one sector = 1 KB = 1024 byte
-#define FlsSectorSize  									 0x00000400
+#define FlsSectorSize  									    0x00000400
 
 //Start address of the first sector
 #define FlsSectorStartaddress							0

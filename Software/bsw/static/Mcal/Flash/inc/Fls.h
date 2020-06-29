@@ -84,10 +84,10 @@ typedef uint32 Fls_LengthType;
 typedef uint8 JOB_PENDING_TYPE;
 #define NO_JOB										(JOB_PENDING_TYPE)0
 #define READ_JOB									(JOB_PENDING_TYPE)1
-#define WRITE_JOB   							(JOB_PENDING_TYPE)2
+#define WRITE_JOB   							    (JOB_PENDING_TYPE)2
 #define ERASE_JOB									(JOB_PENDING_TYPE)3
-#define COMPARE_JOB								(JOB_PENDING_TYPE)4
-#define VERIFICATION_JOB					(JOB_PENDING_TYPE)5
+#define COMPARE_JOB								    (JOB_PENDING_TYPE)4
+#define VERIFICATION_JOB					        (JOB_PENDING_TYPE)5
 
 /*******************************************************************************/
 //  Container for runtime configuration parameters of the FLASH driver.
