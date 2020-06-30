@@ -494,6 +494,7 @@ MemIf_JobResultType Fee_GetJobResult( void )
     return Return_Val ;
 }
 
+
 /****************************************************************************************/
 /*    Function Name           : Fee_InvalidateBlock                                     */
 /*    Function Description    : Invalidates the block BlockNumber.                      */

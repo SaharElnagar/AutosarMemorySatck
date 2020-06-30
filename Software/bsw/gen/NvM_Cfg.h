@@ -5,8 +5,8 @@
  *      Author: Sahar
  */
 
-#ifndef BSW_GEN_NVM_CFG_H_
-#define BSW_GEN_NVM_CFG_H_
+#ifndef NVM_CFG_H_
+#define NVM_CFG_H_
 
 #include "Std_types.h"
 #include "Fee_Cfg.h"
@@ -117,7 +117,7 @@
  * Entry address of the common callback routine which shall be invoked on termination
  * of each asynchronous multi block request
  */
-#define NvMMultiBlockCallback               STD_ON
+#define NvMMultiBlockCallback               STD_OFF
 
 #define MAX_NVM_BLOCK_SIZE                  (100U)
 /*****************************************************************************************/
@@ -137,17 +137,17 @@
 
 /***************************BLOCK_2 CFG********************************/
 #define NVM_NVRAM_BLOCK_2_ID                (2U)
-#define NVM_NVRAM_BLOCK_2_BASENUMBER        (BLOCK_1_NUMBER<<NVM_DATASET_SELECTION_BITS)
+#define NVM_NVRAM_BLOCK_2_BASENUMBER        (BLOCK_4_NUMBER>>NVM_DATASET_SELECTION_BITS)
 #define NVM_NVRAM_BLOCK_2_LENGTH            (BLOCK_1_SIZE-4)
 
 /***************************BLOCK_3 CFG********************************/
 #define NVM_NVRAM_BLOCK_3_ID                (3U)
-#define NVM_NVRAM_BLOCK_3_BASENUMBER        (BLOCK_2_NUMBER<<NVM_DATASET_SELECTION_BITS)
+#define NVM_NVRAM_BLOCK_3_BASENUMBER        (BLOCK_2_NUMBER>>NVM_DATASET_SELECTION_BITS)
 #define NVM_NVRAM_BLOCK_3_LENGTH            (BLOCK_2_SIZE-4)
 
 /***************************BLOCK_4 CFG********************************/
 #define NVM_NVRAM_BLOCK_4_ID                (4U)
-#define NVM_NVRAM_BLOCK_4_BASENUMBER        (BLOCK_9_NUMBER<<NVM_DATASET_SELECTION_BITS)
+#define NVM_NVRAM_BLOCK_4_BASENUMBER        (BLOCK_9_NUMBER>>NVM_DATASET_SELECTION_BITS)
 #define NVM_NVRAM_BLOCK_4_LENGTH            (BLOCK_9_SIZE-4)
 
 

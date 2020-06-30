@@ -1052,6 +1052,16 @@ void NvM_WriteAll( void )
     }
 }
 
+void NvM_JobEndNotification(void)
+{
+
+    EndJobStatus.EndJobSuccess = 1;
+}
+
+void NvM_JobErrorNotification (void)
+{
+    EndJobStatus.EndJobFailed  = 1 ;
+}
 /****************************************************************************************/
 /*    Function Name           : NvM_MainFunction                                        */
 /*    Function Description    : Service for performing the processing of the NvM jobs.  */
@@ -1197,7 +1207,7 @@ static void NvM_MainFunction_ReadBlock(void)
         }
         else
         {
-            BlockNumber = (NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockBaseNumber >>\
+            BlockNumber = (NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockBaseNumber <<\
                     NVM_DATASET_SELECTION_BITS ) ;
             BlockNumber = BlockNumber + dataIndex ;
             /*Go to next state to read data from block*/
@@ -1411,7 +1421,6 @@ static void NvM_MainFunction_ReadBlock(void)
 static void NvM_MainFunction_WriteBlock(void)
 {
     static uint8 Current_State = CALC_CRC;
-    static uint32 CRC_Val = 0 ;
     static uint8 Retry_Counter = 0;
     static uint8 redundant_block_Num = 0;
 
@@ -1436,11 +1445,10 @@ static void NvM_MainFunction_WriteBlock(void)
               * So , Calculate CRC
               */
              /* ECUC_NvM_00119 */
-             if((NvMBlockDescriptor[Current_Job.Block_Id].NvMRamBlockDataAddress != Current_Job.RAM_Ptr) ||
-                (NvMBlockDescriptor[Current_Job.Block_Id].NvMCalcRamBlockCrc == TRUE))
+             if((NvMBlockDescriptor[Current_Job.Block_Id].NvMBlockUseCrc == TRUE))
              {
 
-                  CalculateCRC(Current_Job.Block_Id, NvMBlockDescriptor[Current_Job.Block_Id].NvMRamBlockDataAddress) ;
+                  CalculateCRC(Current_Job.Block_Id, Current_Job.RAM_Ptr) ;
 
                  /* [SWS_NvM_00852]
                   * The job of the function NvM_WriteBlock shall skip writing and consider the job as
@@ -1462,9 +1470,9 @@ static void NvM_MainFunction_WriteBlock(void)
 
              }
 
-             if(CRC_Val != 0){
+             if(CRCTempbuffer != 0){
 
-                for (counter = 0 ; counter < NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength - 4 ; counter++){
+                for (counter = 0 ; counter < NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength ; counter++){
 
                       TempBuffer[counter] = *((uint8 *)(Current_Job.RAM_Ptr)) ;
                       Current_Job.RAM_Ptr = ((uint8 *)(Current_Job.RAM_Ptr) + 1) ;
@@ -1472,18 +1480,20 @@ static void NvM_MainFunction_WriteBlock(void)
                 }
 
                 /*Add CRC Value to the buffer*/
-                TempBuffer[NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength - 4] = *((uint8 *)&CRC_Val) ;
-                TempBuffer[NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength - 3] = *(((uint8 *)&CRC_Val) + 1) ;
-                TempBuffer[NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength - 2] = *(((uint8 *)&CRC_Val) + 2) ;
-                TempBuffer[NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength - 1] = *(((uint8 *)&CRC_Val) + 3) ;
-
+                TempBuffer[NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength] = *((uint8 *)&CRCTempbuffer) ;
+                TempBuffer[NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength +1] = *(((uint8 *)&CRCTempbuffer) + 1) ;
+                TempBuffer[NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength +2] = *(((uint8 *)&CRCTempbuffer) + 2) ;
+                TempBuffer[NvMBlockDescriptor[Current_Job.Block_Id].NvMNvBlockLength +3] = *(((uint8 *)&CRCTempbuffer) + 3) ;
+                Current_State = WRITE_NV_BLOCK ;
              }
          }
-
+      break;
      /* case WRITE_NV_BLOCK */
      case WRITE_NV_BLOCK :
 
-         if(MemIf_GetStatus(NvMBlockDescriptor[Current_Job.Block_Id].NvMNvramDeviceId) == MEMIF_IDLE){
+         if(MemIf_GetStatus(NvMBlockDescriptor[Current_Job.Block_Id].NvMNvramDeviceId) == MEMIF_IDLE\
+                 && EndJobStatus.EndJobSuccess ==0 && EndJobStatus.EndJobFailed==0)
+         {
 
 
             /* [SWS_NvM_00303]
@@ -1529,7 +1539,7 @@ static void NvM_MainFunction_WriteBlock(void)
             Std_ReturnType InitWrite ;
 
             /*Call MemIf_Write function*/
-            if(CRC_Val != 0){
+            if(CRCTempbuffer != 0){
 
                 InitWrite = MemIf_Write(NvMBlockDescriptor[Current_Job.Block_Id].NvMNvramDeviceId, Fee_Ea_Block_Num, TempBuffer) ;
 
@@ -1583,14 +1593,13 @@ static void NvM_MainFunction_WriteBlock(void)
          }
 
          else{
-
              redundant_block_Num = 0;
              AdministrativeBlock[Current_Job.Block_Id].BlockResultStatus = NVM_REQ_OK ;
              AdministrativeBlock[Current_Job.Block_Id].PRAMStatus = VALID_UNCHANGED ;
 
-             if(CRC_Val != 0){
-                 AdministrativeBlock[Current_Job.Block_Id].PrevCRCVal = CRC_Val ;
-                 CRC_Val = 0 ;
+             if(CRCTempbuffer != 0){
+                 AdministrativeBlock[Current_Job.Block_Id].PrevCRCVal = CRCTempbuffer ;
+                 CRCTempbuffer = 0 ;
              }
 
              Current_State = WRITE_END ;
@@ -1612,7 +1621,7 @@ static void NvM_MainFunction_WriteBlock(void)
           */
          Retry_Counter++ ;
 
-         if(Retry_Counter >= NvMBlockDescriptor[Current_Job.Block_Id].NvMMaxNumOfWriteRetries){
+         if(Retry_Counter > NvMBlockDescriptor[Current_Job.Block_Id].NvMMaxNumOfWriteRetries){
 
              AdministrativeBlock[Current_Job.Block_Id].BlockResultStatus = NVM_REQ_NOT_OK ;
              AdministrativeBlock[Current_Job.Block_Id].PRAMStatus = INVALID_UNCHANGED ;
@@ -1634,7 +1643,7 @@ static void NvM_MainFunction_WriteBlock(void)
       */
      case WRITE_END :
 
-         CRC_Val = 0 ;
+         CRCTempbuffer = 0 ;
          Retry_Counter = 0;
          redundant_block_Num = 0;
 
@@ -2137,7 +2146,7 @@ static void NvM_MainFunction_ReadAll(void)
                     if(MemIf_Status != MEMIF_BUSY && EndJobStatus.EndJobSuccess == 0&&EndJobStatus.EndJobFailed ==0)
                     {
                         /*Get block number*/
-                        BlockNumber = (NvMBlockDescriptor[block_counter].NvMNvBlockBaseNumber >>\
+                        BlockNumber = (NvMBlockDescriptor[block_counter].NvMNvBlockBaseNumber <<\
                                                     NVM_DATASET_SELECTION_BITS ) ;
                         Length = NvMBlockDescriptor[block_counter].NvMNvBlockLength ;
                         MemIf_Read(DeviceId , BlockNumber ,TempBuffer ,Length) ;
@@ -2264,10 +2273,10 @@ static void NvM_MainFunction_ReadAll(void)
 
         MultiBlcokRequest.ResultStatus = NVM_REQ_OK;
 
-        if(NvMMultiBlockCallback != STD_OFF)
-        {
+#if(NvMMultiBlockCallback != STD_OFF)
+
             NvM_MultiBlockCallbackFunction(MultiBlcokRequest.request,MultiBlcokRequest.ResultStatus);
-        }
+#endif
         MultiBlcokRequest.request = IDLE_REQUEST ;
     }
 }

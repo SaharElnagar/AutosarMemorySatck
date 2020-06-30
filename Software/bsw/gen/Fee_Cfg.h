@@ -68,7 +68,7 @@
 #define BLOCK_1_SIZE                    (20U)
 #define BLOCK_2_SIZE                    (20U)
 #define BLOCK_3_SIZE                    (20U)
-#define BLOCK_4_SIZE                    (100U)
+#define BLOCK_4_SIZE                    (20U)
 #define BLOCK_5_SIZE                    (200U)
 #define BLOCK_6_SIZE                    (50U)
 #define BLOCK_7_SIZE                    (4U)

@@ -32,8 +32,3 @@ Std_ReturnType Det_ReportRuntimeError(uint16 ModuleId, uint8 InstanceId, uint8 A
 }
 
 
-void NvM_JobEndNotification(void)
-{}
-
-void NvM_JobErrorNotification (void)
-{}

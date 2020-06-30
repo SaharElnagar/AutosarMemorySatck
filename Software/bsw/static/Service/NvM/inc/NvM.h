@@ -63,8 +63,9 @@
 /*****************************************************************************************/
 /*                              Global Functions Prototypes                              */
 /*****************************************************************************************/
-
+void NvM_Init(const NvM_ConfigType* ConfigPtr );
 Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr ) ;
+Std_ReturnType NvM_ReadBlock( NvM_BlockIdType BlockId, void* NvM_DstPtr ) ;
 Std_ReturnType NvM_InvalidateNvBlock( NvM_BlockIdType BlockId ) ;
 void NvM_WriteAll( void ) ;
 void NvM_MainFunction( void ) ;

@@ -1,32 +1,34 @@
 ******************************************************************************
                   TI ARM Linker PC v18.12.2                    
 ******************************************************************************
->> Linked Tue Jun 30 00:58:48 2020
+>> Linked Tue Jun 30 04:05:15 2020
 
 OUTPUT FILE NAME:   <MemoryStack.out>
-ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 000026b1
+ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 00006e09
 
 
 MEMORY CONFIGURATION
 
          name            origin    length      used     unused   attr    fill
 ----------------------  --------  ---------  --------  --------  ----  --------
-  FLASH                 00000000   00040000  000027b2  0003d84e  R  X
-  SRAM                  20000000   00008000  0000053f  00007ac1  RW X
+  FLASH                 00000000   00040000  00007304  00038cfc  R  X
+  SRAM                  20000000   00008000  00000fa9  00007057  RW X
 
 
 SEGMENT ALLOCATION MAP
 
 run origin  load origin   length   init length attrs members
 ----------  ----------- ---------- ----------- ----- -------
-00000000    00000000    000027b8   000027b8    r-x
+00000000    00000000    00007308   00007308    r-x
   00000000    00000000    0000026c   0000026c    r-- .intvecs
-  0000026c    0000026c    000024b6   000024b6    r-x .text
-  00002728    00002728    00000090   00000090    r-- .cinit
-20000000    20000000    0000053f   00000000    rw-
-  20000000    20000000    00000200   00000000    rw- .stack
-  20000200    20000200    000001dc   00000000    rw- .data
-  200003dc    200003dc    00000163   00000000    rw- .bss
+  0000026c    0000026c    00006c04   00006c04    r-x .text
+  00006e70    00006e70    0000036c   0000036c    r-- .const
+  000071e0    000071e0    00000128   00000128    r-- .cinit
+20000000    20000000    00000fb0   00000000    rw-
+  20000000    20000000    0000026c   00000000    rw- .vtable
+  2000026c    2000026c    0000078f   00000000    rw- .bss
+  20000a00    20000a00    000003ae   00000000    rw- .data
+  20000db0    20000db0    00000200   00000000    rw- .stack
 
 
 SECTION ALLOCATION MAP
@@ -37,300 +39,700 @@ section   page    origin      length       input sections
 .intvecs   0    00000000    0000026c     
                   00000000    0000026c     tm4c123gh6pm_startup_ccs.obj (.intvecs)
 
-.text      0    0000026c    000024b6     
-                  0000026c    000010d8     Fee.obj (.text)
-                  00001344    00000904     Fee_Sector.obj (.text)
-                  00001c48    000007c8     Fls.obj (.text)
-                  00002410    00000104     main.obj (.text)
-                  00002514    0000009c     rtsv7M4_T_le_v4SPD16_eabi.lib : memcpy_t2.asm.obj (.text)
-                  000025b0    00000068                                   : copy_decompress_lzss.c.obj (.text:decompress:lzss:__TI_decompress_lzss)
-                  00002618    00000052     stub.obj (.text)
-                  0000266a    00000002     --HOLE-- [fill = 0]
-                  0000266c    00000044     rtsv7M4_T_le_v4SPD16_eabi.lib : autoinit.c.obj (.text:__TI_auto_init_nobinit_nopinit:__TI_auto_init_nobinit_nopinit)
-                  000026b0    00000034                                   : boot_cortex_m.c.obj (.text:_c_int00_noargs:_c_int00_noargs)
-                  000026e4    0000001c                                   : copy_zero_init.c.obj (.text:decompress:ZI:__TI_zero_init_nomemset:__TI_zero_init_nomemset)
-                  00002700    0000000e                                   : copy_decompress_none.c.obj (.text:decompress:none:__TI_decompress_none)
-                  0000270e    0000000c     tm4c123gh6pm_startup_ccs.obj (.text)
-                  0000271a    00000004     rtsv7M4_T_le_v4SPD16_eabi.lib : pre_init.c.obj (.text:_system_pre_init)
-                  0000271e    00000004                                   : exit.c.obj (.text:abort:abort)
+.text      0    0000026c    00006c04     
+                  0000026c    00001bf0     NvM.obj (.text)
+                  00001e5c    000010d8     Fee.obj (.text)
+                  00002f34    00000f80     sysctl.obj (.text)
+                  00003eb4    00000904     Fee_Sector.obj (.text)
+                  000047b8    000008ac     Ea.obj (.text)
+                  00005064    000007e0     Eep.obj (.text)
+                  00005844    000007c8     Fls.obj (.text)
+                  0000600c    00000610     Queue.obj (.text)
+                  0000661c    000003c0     interrupt.obj (.text)
+                  000069dc    00000138     main.obj (.text)
+                  00006b14    000000a4     MemIf.obj (.text)
+                  00006bb8    0000009c     rtsv7M4_T_le_v4SPD16_eabi.lib : memcpy_t2.asm.obj (.text)
+                  00006c54    0000007a                                   : memset_t2.asm.obj (.text)
+                  00006cce    00000068                                   : copy_decompress_lzss.c.obj (.text:decompress:lzss:__TI_decompress_lzss)
+                  00006d36    0000004e     stub.obj (.text)
+                  00006d84    00000044     rtsv7M4_T_le_v4SPD16_eabi.lib : autoinit.c.obj (.text:__TI_auto_init_nobinit_nopinit:__TI_auto_init_nobinit_nopinit)
+                  00006dc8    0000003e     cpu.obj (.text)
+                  00006e06    00000002     --HOLE-- [fill = 0]
+                  00006e08    00000034     rtsv7M4_T_le_v4SPD16_eabi.lib : boot_cortex_m.c.obj (.text:_c_int00_noargs:_c_int00_noargs)
+                  00006e3c    0000000e                                   : copy_decompress_none.c.obj (.text:decompress:none:__TI_decompress_none)
+                  00006e4a    0000000c                                   : copy_zero_init.c.obj (.text:decompress:ZI:__TI_zero_init)
+                  00006e56    0000000c     tm4c123gh6pm_startup_ccs.obj (.text)
+                  00006e62    00000006     sysctl.obj (.text:SysCtlDelay)
+                  00006e68    00000004     rtsv7M4_T_le_v4SPD16_eabi.lib : pre_init.c.obj (.text:_system_pre_init)
+                  00006e6c    00000004                                   : exit.c.obj (.text:abort:abort)
 
-.cinit     0    00002728    00000090     
-                  00002728    00000069     (.cinit..data.load) [load image, compression = lzss]
-                  00002791    00000003     --HOLE-- [fill = 0]
-                  00002794    0000000c     (__TI_handler_table)
-                  000027a0    00000008     (.cinit..bss.load) [load image, compression = zero_init]
-                  000027a8    00000010     (__TI_cinit_table)
+.const     0    00006e70    0000036c     
+                  00006e70    000001b0     sysctl.obj (.const:g_pppui32XTALtoVCO)
+                  00007020    0000009c     interrupt.obj (.const:g_pui32Regs)
+                  000070bc    0000006c     sysctl.obj (.const:g_pui32Xtals)
+                  00007128    00000030     sysctl.obj (.const:g_sXTALtoMEMTIM)
+                  00007158    00000020     interrupt.obj (.const:g_pui32Priority)
+                  00007178    00000014     interrupt.obj (.const:g_pui32Dii16Regs)
+                  0000718c    00000014     interrupt.obj (.const:g_pui32EnRegs)
+                  000071a0    00000014     interrupt.obj (.const:g_pui32PendRegs)
+                  000071b4    00000014     interrupt.obj (.const:g_pui32UnpendRegs)
+                  000071c8    0000000c     NvM.obj (.const:$P$T0$1)
+                  000071d4    00000008     sysctl.obj (.const:g_pui32VCOFrequencies)
+
+.cinit     0    000071e0    00000128     
+                  000071e0    000000f2     (.cinit..data.load) [load image, compression = lzss]
+                  000072d2    00000002     --HOLE-- [fill = 0]
+                  000072d4    0000000c     (__TI_handler_table)
+                  000072e0    00000008     (.cinit..bss.load) [load image, compression = zero_init]
+                  000072e8    00000008     (.cinit..vtable.load) [load image, compression = zero_init]
+                  000072f0    00000018     (__TI_cinit_table)
 
 .init_array 
 *          0    00000000    00000000     UNINITIALIZED
 
-.data      0    20000200    000001dc     UNINITIALIZED
-                  20000200    000000a0     Fee.obj (.data:ValidBlocksInfo)
-                  200002a0    00000078     Fee_PrivateCfg.obj (.data:Fee_BlockConfig)
-                  20000318    00000064     main.obj (.data:Wdata)
-                  2000037c    00000004     --HOLE--
-                  20000380    0000002c     Fee_Sector.obj (.data)
-                  200003ac    00000004     --HOLE--
-                  200003b0    00000014     Fee.obj (.data)
-                  200003c4    00000010     Fls.obj (.data)
-                  200003d4    00000008     Fls_PBcfg.obj (.data:Fls_Config)
+.vtable    0    20000000    0000026c     UNINITIALIZED
+                  20000000    0000026c     interrupt.obj (.vtable)
 
-.bss       0    200003dc    00000163     UNINITIALIZED
-                  200003dc    000000dc     (.common:BlockData)
-                  200004b8    00000028     (.common:Rdata)
-                  200004e0    00000018     (.common:ActiveSectorInfo)
-                  200004f8    00000014     Fee_Sector.obj (.bss:cmd$1)
-                  2000050c    00000014     Fee_Sector.obj (.bss:cmd$4)
-                  20000520    0000000a     Fls.obj (.bss)
-                  2000052a    00000002     --HOLE--
-                  2000052c    00000008     (.common:JobParametersCopy)
-                  20000534    00000007     Fee.obj (.bss)
-                  2000053b    00000004     (.common:ModuleInternalManagement)
+.bss       0    2000026c    0000078f     UNINITIALIZED
+                  2000026c    000004b0     Queue.obj (.bss:Immediate_Job_Queue)
+                  2000071c    000000dc     (.common:BlockData)
+                  200007f8    00000078     (.common:Standard_Job_Queue)
+                  20000870    00000068     NvM.obj (.bss:TempBuffer)
+                  200008d8    00000028     NvM.obj (.bss:AdministrativeBlock)
+                  20000900    00000028     (.common:Rdata)
+                  20000928    00000018     (.common:ActiveSectorInfo)
+                  20000940    00000018     (.common:Block4_PRAMBLOCK)
+                  20000958    00000014     Fee_Sector.obj (.bss:cmd$1)
+                  2000096c    00000014     Fee_Sector.obj (.bss:cmd$4)
+                  20000980    00000014     (.common:CRC_Job_Queue)
+                  20000994    00000010     (.common:Block2_PRAMBLOCK)
+                  200009a4    0000000c     NvM.obj (.bss:Current_Job)
+                  200009b0    0000000c     Eep.obj (.bss:ParametersCopyObj)
+                  200009bc    0000000a     Fls.obj (.bss)
+                  200009c6    00000001     NvM.obj (.bss:EndJobStatus)
+                  200009c7    00000001     --HOLE--
+                  200009c8    00000009     Ea.obj (.bss)
+                  200009d1    00000003     NvM.obj (.bss:MultiBlcokRequest)
+                  200009d4    00000009     NvM.obj (.bss)
+                  200009dd    00000003     --HOLE--
+                  200009e0    00000008     Ea.obj (.bss:ParametersCopy)
+                  200009e8    00000008     (.common:JobParametersCopy)
+                  200009f0    00000007     Fee.obj (.bss)
+                  200009f7    00000004     (.common:ModuleInternalManagement)
 
-.stack     0    20000000    00000200     UNINITIALIZED
-                  20000000    00000004     rtsv7M4_T_le_v4SPD16_eabi.lib : boot_cortex_m.c.obj (.stack)
-                  20000004    000001fc     --HOLE--
+.data      0    20000a00    000003ae     UNINITIALIZED
+                  20000a00    00000140     NvM_Lcfg.obj (.data:NvMBlockDescriptor)
+                  20000b40    000000a0     Fee.obj (.data:ValidBlocksInfo)
+                  20000be0    00000078     Fee_PrivateCfg.obj (.data:Fee_BlockConfig)
+                  20000c58    00000064     main.obj (.data:Wdata)
+                  20000cbc    00000004     Queue.obj (.data:CRC_Queue_Indeces)
+                  20000cc0    0000002c     Fee_Sector.obj (.data)
+                  20000cec    00000015     AppCfg.obj (.data:Block4_ROMBLOCK)
+                  20000d01    00000006     Queue.obj (.data)
+                  20000d07    00000001     main.obj (.data)
+                  20000d08    00000014     Fee.obj (.data)
+                  20000d1c    00000010     AppCfg.obj (.data:Block2_ROMBLOCK)
+                  20000d2c    00000010     AppCfg.obj (.data:Block3_ROMBLOCK)
+                  20000d3c    00000010     Fls.obj (.data)
+                  20000d4c    00000010     NvM.obj (.data)
+                  20000d5c    0000000c     Ea_PrivateCfg.obj (.data:Ea_BlockSConfig)
+                  20000d68    00000008     Eep.obj (.data)
+                  20000d70    00000008     Fls_PBcfg.obj (.data:Fls_Config)
+                  20000d78    00000008     MemIf.obj (.data:MemIf_GetResultFctPtr)
+                  20000d80    00000008     MemIf.obj (.data:MemIf_GetStatusFctPtr)
+                  20000d88    00000008     MemIf.obj (.data:MemIf_InvalidateFctPtr)
+                  20000d90    00000008     MemIf.obj (.data:MemIf_ReadFctPtr)
+                  20000d98    00000008     MemIf.obj (.data:MemIf_WriteFctPtr)
+                  20000da0    00000005     Ea.obj (.data)
+                  20000da5    00000001     --HOLE--
+                  20000da6    00000004     Queue.obj (.data:Immed_Queue_Indeces)
+                  20000daa    00000004     Queue.obj (.data:Stand_Queue_Indeces)
+
+.stack     0    20000db0    00000200     UNINITIALIZED
+                  20000db0    00000004     rtsv7M4_T_le_v4SPD16_eabi.lib : boot_cortex_m.c.obj (.stack)
+                  20000db4    000001fc     --HOLE--
 
 MODULE SUMMARY
 
-       Module                         code   ro data   rw data
-       ------                         ----   -------   -------
+       Module                         code    ro data   rw data
+       ------                         ----    -------   -------
     .\
-       tm4c123gh6pm_startup_ccs.obj   12     620       0      
-       main.obj                       260    0         140    
-    +--+------------------------------+------+---------+---------+
-       Total:                         272    620       140    
-                                                              
+       tm4c123gh6pm_startup_ccs.obj   12      620       0      
+       main.obj                       312     0         141    
+    +--+------------------------------+-------+---------+---------+
+       Total:                         324     620       141    
+                                                               
     .\bsw\gen\
-       Fls_PBcfg.obj                  0      0         8      
-    +--+------------------------------+------+---------+---------+
-       Total:                         0      0         8      
-                                                              
+       NvM_Lcfg.obj                   0       0         320    
+       Fls_PBcfg.obj                  0       0         8      
+    +--+------------------------------+-------+---------+---------+
+       Total:                         0       0         328    
+                                                               
+    .\bsw\static\Infrastructure\platform\src\
+       sysctl.obj                     3974    596       0      
+       interrupt.obj                  960     268       620    
+       cpu.obj                        62      0         0      
+    +--+------------------------------+-------+---------+---------+
+       Total:                         4996    864       620    
+                                                               
+    .\bsw\static\Interface\EA\src\
+       Ea.obj                         2220    0         22     
+       Ea_PrivateCfg.obj              0       0         12     
+    +--+------------------------------+-------+---------+---------+
+       Total:                         2220    0         34     
+                                                               
     .\bsw\static\Interface\FEE\src\
-       Fee.obj                        4312   0         443    
-       Fee_Sector.obj                 2308   0         84     
-       Fee_PrivateCfg.obj             0      0         120    
-    +--+------------------------------+------+---------+---------+
-       Total:                         6620   0         647    
-                                                              
+       Fee.obj                        4312    0         443    
+       Fee_Sector.obj                 2308    0         84     
+       Fee_PrivateCfg.obj             0       0         120    
+    +--+------------------------------+-------+---------+---------+
+       Total:                         6620    0         647    
+                                                               
+    .\bsw\static\Interface\MemIf\src\
+       MemIf.obj                      164     0         40     
+    +--+------------------------------+-------+---------+---------+
+       Total:                         164     0         40     
+                                                               
+    .\bsw\static\Mcal\Eep\src\
+       Eep.obj                        2016    0         20     
+    +--+------------------------------+-------+---------+---------+
+       Total:                         2016    0         20     
+                                                               
     .\bsw\static\Mcal\Flash\src\
-       Fls.obj                        1992   0         26     
-    +--+------------------------------+------+---------+---------+
-       Total:                         1992   0         26     
-                                                              
+       Fls.obj                        1992    0         26     
+    +--+------------------------------+-------+---------+---------+
+       Total:                         1992    0         26     
+                                                               
+    .\bsw\static\Service\NvM\src\
+       NvM.obj                        7152    12        185    
+       Queue.obj                      1552    0         1358   
+    +--+------------------------------+-------+---------+---------+
+       Total:                         8704    12        1543   
+                                                               
     .\bsw\stub\
-       stub.obj                       82     0         0      
-    +--+------------------------------+------+---------+---------+
-       Total:                         82     0         0      
-                                                              
+       AppCfg.obj                     0       0         93     
+       stub.obj                       78      0         0      
+    +--+------------------------------+-------+---------+---------+
+       Total:                         78      0         93     
+                                                               
     C:\ti\ccs910\ccs\tools\compiler\ti-cgt-arm_18.12.2.LTS\lib\rtsv7M4_T_le_v4SPD16_eabi.lib
-       memcpy_t2.asm.obj              156    0         0      
-       copy_decompress_lzss.c.obj     104    0         0      
-       autoinit.c.obj                 68     0         0      
-       boot_cortex_m.c.obj            52     0         0      
-       copy_zero_init.c.obj           28     0         0      
-       copy_decompress_none.c.obj     14     0         0      
-       exit.c.obj                     4      0         0      
-       pre_init.c.obj                 4      0         0      
-    +--+------------------------------+------+---------+---------+
-       Total:                         430    0         0      
-                                                              
-       Stack:                         0      0         512    
-       Linker Generated:              0      141       0      
-    +--+------------------------------+------+---------+---------+
-       Grand Total:                   9396   761       1333   
+       memcpy_t2.asm.obj              156     0         0      
+       memset_t2.asm.obj              122     0         0      
+       copy_decompress_lzss.c.obj     104     0         0      
+       autoinit.c.obj                 68      0         0      
+       boot_cortex_m.c.obj            52      0         0      
+       copy_decompress_none.c.obj     14      0         0      
+       copy_zero_init.c.obj           12      0         0      
+       exit.c.obj                     4       0         0      
+       pre_init.c.obj                 4       0         0      
+    +--+------------------------------+-------+---------+---------+
+       Total:                         536     0         0      
+                                                               
+       Stack:                         0       0         512    
+       Linker Generated:              0       294       0      
+    +--+------------------------------+-------+---------+---------+
+       Grand Total:                   27650   1790      4004   
 
 
 LINKER GENERATED COPY TABLES
 
-__TI_cinit_table @ 000027a8 records: 2, size/record: 8, table size: 16
-	.data: load addr=00002728, load size=00000069 bytes, run addr=20000200, run size=000001dc bytes, compression=lzss
-	.bss: load addr=000027a0, load size=00000008 bytes, run addr=200003dc, run size=00000163 bytes, compression=zero_init
+__TI_cinit_table @ 000072f0 records: 3, size/record: 8, table size: 24
+	.data: load addr=000071e0, load size=000000f2 bytes, run addr=20000a00, run size=000003ae bytes, compression=lzss
+	.bss: load addr=000072e0, load size=00000008 bytes, run addr=2000026c, run size=0000078f bytes, compression=zero_init
+	.vtable: load addr=000072e8, load size=00000008 bytes, run addr=20000000, run size=0000026c bytes, compression=zero_init
 
 
 LINKER GENERATED HANDLER TABLE
 
-__TI_handler_table @ 00002794 records: 3, size/record: 4, table size: 12
-	index: 0, handler: __TI_decompress_lzss
-	index: 1, handler: __TI_decompress_none
-	index: 2, handler: __TI_zero_init
+__TI_handler_table @ 000072d4 records: 3, size/record: 4, table size: 12
+	index: 0, handler: __TI_zero_init
+	index: 1, handler: __TI_decompress_lzss
+	index: 2, handler: __TI_decompress_none
 
 
 GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name 
 
-address   name                          
--------   ----                          
-200004e0  ActiveSectorInfo              
-200003dc  BlockData                     
-0000271f  C$$EXIT                       
-00002619  Det_ReportError               
-0000264d  Det_ReportRuntimeError        
-00002633  Det_ReportTransientFault      
-00001811  Erase_Virtualsector           
-200002a0  Fee_BlockConfig               
-00000539  Fee_Cancel                    
-000005f3  Fee_GetJobResult              
-000005ed  Fee_GetStatus                 
-000006e3  Fee_GetVersionInfo            
-0000026d  Fee_Init                      
-00000621  Fee_InvalidateBlock           
-00000705  Fee_JobEndNotification        
-0000070d  Fee_JobErrorNotification      
-00000715  Fee_MainFunction              
-000002e1  Fee_Read                      
-0000042d  Fee_Write                     
-0000167d  FindActiveSector              
-00001345  FindValidBlocks               
-00002315  Fls_BlankCheck                
-000020e5  Fls_Cancel                    
-00002205  Fls_Compare                   
-200003d4  Fls_Config                    
-00001f65  Fls_Erase                     
-00002137  Fls_GetJobResult              
-00002131  Fls_GetStatus                 
-000022eb  Fls_GetVersionInfo            
-00001f09  Fls_Init                      
-000023a9  Fls_MainFunction              
-00002155  Fls_Read                      
-000022cd  Fls_SetMode                   
-00002021  Fls_Write                     
-00001b45  GetIndexFromBlockNum          
-00001881  GetSectorStatus               
-200003b0  JobDone                       
-200003b1  JobError                      
-2000052c  JobParametersCopy             
-2000053b  ModuleInternalManagement      
-00002667  NvM_JobEndNotification        
-00002669  NvM_JobErrorNotification      
-200004b8  Rdata                         
-00001705  ReadVariable                  
-0000270f  ResetISR                      
-000014c7  SearchSectorValidBlocks       
-000018a9  SetSectorStatus               
-00001929  TransferSector                
-20000200  ValidBlocksInfo               
-20000318  Wdata                         
-000018f1  WriteBlock                    
-00001785  WriteVariable                 
-00002411  Write_buffer                  
-20000200  __STACK_END                   
-00000200  __STACK_SIZE                  
-20000200  __STACK_TOP                   
-000027a8  __TI_CINIT_Base               
-000027b8  __TI_CINIT_Limit              
-00002794  __TI_Handler_Table_Base       
-000027a0  __TI_Handler_Table_Limit      
-0000266d  __TI_auto_init_nobinit_nopinit
-000025b1  __TI_decompress_lzss          
-00002701  __TI_decompress_none          
-ffffffff  __TI_pprof_out_hndl           
-ffffffff  __TI_prof_data_size           
-ffffffff  __TI_prof_data_start          
-00000000  __TI_static_base__            
-000026e5  __TI_zero_init_nomemset       
-00002515  __aeabi_memcpy                
-00002515  __aeabi_memcpy4               
-00002515  __aeabi_memcpy8               
-ffffffff  __binit__                     
-ffffffff  __c_args__                    
-UNDEFED   __mpu_init                    
-20000000  __stack                       
-000026b1  _c_int00_noargs               
-UNDEFED   _system_post_cinit            
-0000271b  _system_pre_init              
-0000271f  abort                         
-ffffffff  binit                         
-00000000  g_pfnVectors                  
-0000244f  main                          
-00002515  memcpy                        
+address   name                            
+-------   ----                            
+20000928  ActiveSectorInfo                
+20000994  Block2_PRAMBLOCK                
+20000d1c  Block2_ROMBLOCK                 
+20000d2c  Block3_ROMBLOCK                 
+20000940  Block4_PRAMBLOCK                
+20000cec  Block4_ROMBLOCK                 
+2000071c  BlockData                       
+000069dd  Block_2_NvMSingleBlockCallback  
+00006e6d  C$$EXIT                         
+00006dfd  CPUbasepriGet                   
+00006def  CPUbasepriSet                   
+00006dc9  CPUcpsid                        
+00006ddf  CPUcpsie                        
+00006dd5  CPUprimask                      
+00006deb  CPUwfi                          
+0000656d  CRCJob_Dequeue                  
+000064f9  CRCJob_Enqueue                  
+20000980  CRC_Job_Queue                   
+20000d05  CRC_Queue_Empty                 
+20000d06  CRC_Queue_Full                  
+20000cbc  CRC_Queue_Indeces               
+00006d37  Det_ReportError                 
+00006d6b  Det_ReportRuntimeError          
+00006d51  Det_ReportTransientFault        
+20000d5c  Ea_BlockSConfig                 
+00004a43  Ea_Cancel                       
+00004a8b  Ea_GetJobResult                 
+00004a85  Ea_GetStatus                    
+000047b9  Ea_Init                         
+00004a99  Ea_InvalidateBlock              
+00004a33  Ea_JobEndNotification           
+00004a3b  Ea_JobErrorNotification         
+00004b0f  Ea_MainFunction                 
+0000483b  Ea_Read                         
+00004961  Ea_Write                        
+00005469  Eep_Cancel                      
+00005399  Eep_Compare                     
+000052db  Eep_Erase                       
+00005497  Eep_GetJobResult                
+00005491  Eep_GetStatus                   
+000050cf  Eep_Init                        
+0000549d  Eep_MainFunction                
+0000514d  Eep_Read                        
+0000520f  Eep_Write                       
+00004381  Erase_Virtualsector             
+20000be0  Fee_BlockConfig                 
+00002129  Fee_Cancel                      
+000021e3  Fee_GetJobResult                
+000021dd  Fee_GetStatus                   
+000022d3  Fee_GetVersionInfo              
+00001e5d  Fee_Init                        
+00002211  Fee_InvalidateBlock             
+000022f5  Fee_JobEndNotification          
+000022fd  Fee_JobErrorNotification        
+00002305  Fee_MainFunction                
+00001ed1  Fee_Read                        
+0000201d  Fee_Write                       
+00001cc9  FillTempBuffer                  
+000041ed  FindActiveSector                
+00003eb5  FindValidBlocks                 
+00005f11  Fls_BlankCheck                  
+00005ce1  Fls_Cancel                      
+00005e01  Fls_Compare                     
+20000d70  Fls_Config                      
+00005b61  Fls_Erase                       
+00005d33  Fls_GetJobResult                
+00005d2d  Fls_GetStatus                   
+00005ee7  Fls_GetVersionInfo              
+00005b05  Fls_Init                        
+00005fa5  Fls_MainFunction                
+00005d51  Fls_Read                        
+00005ec9  Fls_SetMode                     
+00005c1d  Fls_Write                       
+000046b5  GetIndexFromBlockNum            
+000043f1  GetSectorStatus                 
+000064a1  Get_SingleJob                   
+20000d03  Immediate_Queue_Empty           
+20000d04  Immediate_Queue_FULL            
+0000600d  Init_Queues                     
+000067dd  IntDisable                      
+0000676b  IntEnable                       
+0000684f  IntIsEnabled                    
+0000662f  IntMasterDisable                
+0000661f  IntMasterEnable                 
+00006945  IntPendClear                    
+000068d5  IntPendSet                      
+00006747  IntPriorityGet                  
+000066bf  IntPriorityGroupingGet          
+000066a5  IntPriorityGroupingSet          
+0000699f  IntPriorityMaskGet              
+00006993  IntPriorityMaskSet              
+000066f7  IntPrioritySet                  
+0000663f  IntRegister                     
+000069a7  IntTrigger                      
+00006691  IntUnregister                   
+20000d08  JobDone                         
+20000d09  JobError                        
+200009e8  JobParametersCopy               
+000063b5  Job_Dequeue                     
+000061cd  Job_Enqueue                     
+00006b75  MemIf_GetJobResult              
+20000d78  MemIf_GetResultFctPtr           
+00006b61  MemIf_GetStatus                 
+20000d80  MemIf_GetStatusFctPtr           
+00006b89  MemIf_InvalidateBlock           
+20000d88  MemIf_InvalidateFctPtr          
+00006b15  MemIf_Read                      
+20000d90  MemIf_ReadFctPtr                
+00006b41  MemIf_Write                     
+20000d98  MemIf_WriteFctPtr               
+200009f7  ModuleInternalManagement        
+20000a00  NvMBlockDescriptor              
+00000385  NvM_GetDataIndex                
+00000413  NvM_GetErrorStatus              
+0000026d  NvM_Init                        
+00000965  NvM_InvalidateNvBlock           
+00000aa1  NvM_JobEndNotification          
+00000aad  NvM_JobErrorNotification        
+00000ac1  NvM_MainFunction                
+00000a3d  NvM_ReadAll                     
+000006a5  NvM_ReadBlock                   
+0000046d  NvM_RestoreBlockDefaults        
+000002d3  NvM_SetDataIndex                
+000005db  NvM_SetRamBlockResultStatus     
+00000a6f  NvM_WriteAll                    
+00000861  NvM_WriteBlock                  
+20000900  Rdata                           
+00004275  ReadVariable                    
+00006e57  ResetISR                        
+00004037  SearchSectorValidBlocks         
+00006129  Search_Queue                    
+00004419  SetSectorStatus                 
+20000daa  Stand_Queue_Indeces             
+200007f8  Standard_Job_Queue              
+20000d01  Standard_Queue_Empty            
+20000d02  Standard_Queue_FULL             
+00003e71  SysCtlAltClkConfig              
+00003599  SysCtlClockFreqSet              
+00003a61  SysCtlClockGet                  
+00003e55  SysCtlClockOutConfig            
+00003891  SysCtlClockSet                  
+0000349d  SysCtlDeepSleep                 
+00003c25  SysCtlDeepSleepClockConfigSet   
+00003c07  SysCtlDeepSleepClockSet         
+0000347d  SysCtlDeepSleepPowerSet         
+00006e63  SysCtlDelay                     
+0000302b  SysCtlFlashSectorSizeGet        
+00002fff  SysCtlFlashSizeGet              
+00003cfb  SysCtlGPIOAHBDisable            
+00003cdf  SysCtlGPIOAHBEnable             
+00003411  SysCtlIntClear                  
+000033f9  SysCtlIntDisable                
+000033e5  SysCtlIntEnable                 
+000033bd  SysCtlIntRegister               
+00003421  SysCtlIntStatus                 
+000033d5  SysCtlIntUnregister             
+00003463  SysCtlLDODeepSleepGet           
+00003453  SysCtlLDODeepSleepSet           
+0000344d  SysCtlLDOSleepGet               
+0000343d  SysCtlLDOSleepSet               
+000034d3  SysCtlMOSCConfigSet             
+00003e39  SysCtlNMIClear                  
+00003e25  SysCtlNMIStatus                 
+000034e9  SysCtlPIOSCCalibrate            
+00003cc9  SysCtlPWMClockGet               
+00003caf  SysCtlPWMClockSet               
+00003369  SysCtlPeripheralClockGating     
+00003321  SysCtlPeripheralDeepSleepDisable
+000032d1  SysCtlPeripheralDeepSleepEnable 
+0000320d  SysCtlPeripheralDisable         
+000031d1  SysCtlPeripheralEnable          
+0000310d  SysCtlPeripheralPowerOff        
+000030d1  SysCtlPeripheralPowerOn         
+00003051  SysCtlPeripheralPresent         
+00003091  SysCtlPeripheralReady           
+00003149  SysCtlPeripheralReset           
+00003295  SysCtlPeripheralSleepDisable    
+00003251  SysCtlPeripheralSleepEnable     
+0000348d  SysCtlReset                     
+00003549  SysCtlResetBehaviorGet          
+00003539  SysCtlResetBehaviorSet          
+000034bf  SysCtlResetCauseClear           
+000034b9  SysCtlResetCauseGet             
+00002ff5  SysCtlSRAMSizeGet               
+00003495  SysCtlSleep                     
+00003469  SysCtlSleepPowerSet             
+00003d23  SysCtlUSBPLLDisable             
+00003d17  SysCtlUSBPLLEnable              
+00003d69  SysCtlVCOGet                    
+00003d51  SysCtlVoltageEventClear         
+00003d35  SysCtlVoltageEventConfig        
+00003d45  SysCtlVoltageEventStatus        
+00004499  TransferSector                  
+20000b40  ValidBlocksInfo                 
+20000c58  Wdata                           
+00004461  WriteBlock                      
+000042f5  WriteVariable                   
+00006a2b  Write_buffer                    
+20000fb0  __STACK_END                     
+00000200  __STACK_SIZE                    
+20000fb0  __STACK_TOP                     
+000072f0  __TI_CINIT_Base                 
+00007308  __TI_CINIT_Limit                
+000072d4  __TI_Handler_Table_Base         
+000072e0  __TI_Handler_Table_Limit        
+00006d85  __TI_auto_init_nobinit_nopinit  
+00006ccf  __TI_decompress_lzss            
+00006e3d  __TI_decompress_none            
+ffffffff  __TI_pprof_out_hndl             
+ffffffff  __TI_prof_data_size             
+ffffffff  __TI_prof_data_start            
+00000000  __TI_static_base__              
+00006e4b  __TI_zero_init                  
+00006c55  __aeabi_memclr                  
+00006c55  __aeabi_memclr4                 
+00006c55  __aeabi_memclr8                 
+00006bb9  __aeabi_memcpy                  
+00006bb9  __aeabi_memcpy4                 
+00006bb9  __aeabi_memcpy8                 
+00006c57  __aeabi_memset                  
+00006c57  __aeabi_memset4                 
+00006c57  __aeabi_memset8                 
+ffffffff  __binit__                       
+ffffffff  __c_args__                      
+UNDEFED   __mpu_init                      
+20000db0  __stack                         
+00006e09  _c_int00_noargs                 
+UNDEFED   _system_post_cinit              
+00006e69  _system_pre_init                
+00006e6d  abort                           
+ffffffff  binit                           
+20000000  g_pfnRAMVectors                 
+00000000  g_pfnVectors                    
+00006a69  main                            
+00006bb9  memcpy                          
+00006c5d  memset                          
+20000d07  test_case_state                 
 
 
 GLOBAL SYMBOLS: SORTED BY Symbol Address 
 
-address   name                          
--------   ----                          
-00000000  __TI_static_base__            
-00000000  g_pfnVectors                  
-00000200  __STACK_SIZE                  
-0000026d  Fee_Init                      
-000002e1  Fee_Read                      
-0000042d  Fee_Write                     
-00000539  Fee_Cancel                    
-000005ed  Fee_GetStatus                 
-000005f3  Fee_GetJobResult              
-00000621  Fee_InvalidateBlock           
-000006e3  Fee_GetVersionInfo            
-00000705  Fee_JobEndNotification        
-0000070d  Fee_JobErrorNotification      
-00000715  Fee_MainFunction              
-00001345  FindValidBlocks               
-000014c7  SearchSectorValidBlocks       
-0000167d  FindActiveSector              
-00001705  ReadVariable                  
-00001785  WriteVariable                 
-00001811  Erase_Virtualsector           
-00001881  GetSectorStatus               
-000018a9  SetSectorStatus               
-000018f1  WriteBlock                    
-00001929  TransferSector                
-00001b45  GetIndexFromBlockNum          
-00001f09  Fls_Init                      
-00001f65  Fls_Erase                     
-00002021  Fls_Write                     
-000020e5  Fls_Cancel                    
-00002131  Fls_GetStatus                 
-00002137  Fls_GetJobResult              
-00002155  Fls_Read                      
-00002205  Fls_Compare                   
-000022cd  Fls_SetMode                   
-000022eb  Fls_GetVersionInfo            
-00002315  Fls_BlankCheck                
-000023a9  Fls_MainFunction              
-00002411  Write_buffer                  
-0000244f  main                          
-00002515  __aeabi_memcpy                
-00002515  __aeabi_memcpy4               
-00002515  __aeabi_memcpy8               
-00002515  memcpy                        
-000025b1  __TI_decompress_lzss          
-00002619  Det_ReportError               
-00002633  Det_ReportTransientFault      
-0000264d  Det_ReportRuntimeError        
-00002667  NvM_JobEndNotification        
-00002669  NvM_JobErrorNotification      
-0000266d  __TI_auto_init_nobinit_nopinit
-000026b1  _c_int00_noargs               
-000026e5  __TI_zero_init_nomemset       
-00002701  __TI_decompress_none          
-0000270f  ResetISR                      
-0000271b  _system_pre_init              
-0000271f  C$$EXIT                       
-0000271f  abort                         
-00002794  __TI_Handler_Table_Base       
-000027a0  __TI_Handler_Table_Limit      
-000027a8  __TI_CINIT_Base               
-000027b8  __TI_CINIT_Limit              
-20000000  __stack                       
-20000200  ValidBlocksInfo               
-20000200  __STACK_END                   
-20000200  __STACK_TOP                   
-200002a0  Fee_BlockConfig               
-20000318  Wdata                         
-200003b0  JobDone                       
-200003b1  JobError                      
-200003d4  Fls_Config                    
-200003dc  BlockData                     
-200004b8  Rdata                         
-200004e0  ActiveSectorInfo              
-2000052c  JobParametersCopy             
-2000053b  ModuleInternalManagement      
-ffffffff  __TI_pprof_out_hndl           
-ffffffff  __TI_prof_data_size           
-ffffffff  __TI_prof_data_start          
-ffffffff  __binit__                     
-ffffffff  __c_args__                    
-ffffffff  binit                         
-UNDEFED   __mpu_init                    
-UNDEFED   _system_post_cinit            
+address   name                            
+-------   ----                            
+00000000  __TI_static_base__              
+00000000  g_pfnVectors                    
+00000200  __STACK_SIZE                    
+0000026d  NvM_Init                        
+000002d3  NvM_SetDataIndex                
+00000385  NvM_GetDataIndex                
+00000413  NvM_GetErrorStatus              
+0000046d  NvM_RestoreBlockDefaults        
+000005db  NvM_SetRamBlockResultStatus     
+000006a5  NvM_ReadBlock                   
+00000861  NvM_WriteBlock                  
+00000965  NvM_InvalidateNvBlock           
+00000a3d  NvM_ReadAll                     
+00000a6f  NvM_WriteAll                    
+00000aa1  NvM_JobEndNotification          
+00000aad  NvM_JobErrorNotification        
+00000ac1  NvM_MainFunction                
+00001cc9  FillTempBuffer                  
+00001e5d  Fee_Init                        
+00001ed1  Fee_Read                        
+0000201d  Fee_Write                       
+00002129  Fee_Cancel                      
+000021dd  Fee_GetStatus                   
+000021e3  Fee_GetJobResult                
+00002211  Fee_InvalidateBlock             
+000022d3  Fee_GetVersionInfo              
+000022f5  Fee_JobEndNotification          
+000022fd  Fee_JobErrorNotification        
+00002305  Fee_MainFunction                
+00002ff5  SysCtlSRAMSizeGet               
+00002fff  SysCtlFlashSizeGet              
+0000302b  SysCtlFlashSectorSizeGet        
+00003051  SysCtlPeripheralPresent         
+00003091  SysCtlPeripheralReady           
+000030d1  SysCtlPeripheralPowerOn         
+0000310d  SysCtlPeripheralPowerOff        
+00003149  SysCtlPeripheralReset           
+000031d1  SysCtlPeripheralEnable          
+0000320d  SysCtlPeripheralDisable         
+00003251  SysCtlPeripheralSleepEnable     
+00003295  SysCtlPeripheralSleepDisable    
+000032d1  SysCtlPeripheralDeepSleepEnable 
+00003321  SysCtlPeripheralDeepSleepDisable
+00003369  SysCtlPeripheralClockGating     
+000033bd  SysCtlIntRegister               
+000033d5  SysCtlIntUnregister             
+000033e5  SysCtlIntEnable                 
+000033f9  SysCtlIntDisable                
+00003411  SysCtlIntClear                  
+00003421  SysCtlIntStatus                 
+0000343d  SysCtlLDOSleepSet               
+0000344d  SysCtlLDOSleepGet               
+00003453  SysCtlLDODeepSleepSet           
+00003463  SysCtlLDODeepSleepGet           
+00003469  SysCtlSleepPowerSet             
+0000347d  SysCtlDeepSleepPowerSet         
+0000348d  SysCtlReset                     
+00003495  SysCtlSleep                     
+0000349d  SysCtlDeepSleep                 
+000034b9  SysCtlResetCauseGet             
+000034bf  SysCtlResetCauseClear           
+000034d3  SysCtlMOSCConfigSet             
+000034e9  SysCtlPIOSCCalibrate            
+00003539  SysCtlResetBehaviorSet          
+00003549  SysCtlResetBehaviorGet          
+00003599  SysCtlClockFreqSet              
+00003891  SysCtlClockSet                  
+00003a61  SysCtlClockGet                  
+00003c07  SysCtlDeepSleepClockSet         
+00003c25  SysCtlDeepSleepClockConfigSet   
+00003caf  SysCtlPWMClockSet               
+00003cc9  SysCtlPWMClockGet               
+00003cdf  SysCtlGPIOAHBEnable             
+00003cfb  SysCtlGPIOAHBDisable            
+00003d17  SysCtlUSBPLLEnable              
+00003d23  SysCtlUSBPLLDisable             
+00003d35  SysCtlVoltageEventConfig        
+00003d45  SysCtlVoltageEventStatus        
+00003d51  SysCtlVoltageEventClear         
+00003d69  SysCtlVCOGet                    
+00003e25  SysCtlNMIStatus                 
+00003e39  SysCtlNMIClear                  
+00003e55  SysCtlClockOutConfig            
+00003e71  SysCtlAltClkConfig              
+00003eb5  FindValidBlocks                 
+00004037  SearchSectorValidBlocks         
+000041ed  FindActiveSector                
+00004275  ReadVariable                    
+000042f5  WriteVariable                   
+00004381  Erase_Virtualsector             
+000043f1  GetSectorStatus                 
+00004419  SetSectorStatus                 
+00004461  WriteBlock                      
+00004499  TransferSector                  
+000046b5  GetIndexFromBlockNum            
+000047b9  Ea_Init                         
+0000483b  Ea_Read                         
+00004961  Ea_Write                        
+00004a33  Ea_JobEndNotification           
+00004a3b  Ea_JobErrorNotification         
+00004a43  Ea_Cancel                       
+00004a85  Ea_GetStatus                    
+00004a8b  Ea_GetJobResult                 
+00004a99  Ea_InvalidateBlock              
+00004b0f  Ea_MainFunction                 
+000050cf  Eep_Init                        
+0000514d  Eep_Read                        
+0000520f  Eep_Write                       
+000052db  Eep_Erase                       
+00005399  Eep_Compare                     
+00005469  Eep_Cancel                      
+00005491  Eep_GetStatus                   
+00005497  Eep_GetJobResult                
+0000549d  Eep_MainFunction                
+00005b05  Fls_Init                        
+00005b61  Fls_Erase                       
+00005c1d  Fls_Write                       
+00005ce1  Fls_Cancel                      
+00005d2d  Fls_GetStatus                   
+00005d33  Fls_GetJobResult                
+00005d51  Fls_Read                        
+00005e01  Fls_Compare                     
+00005ec9  Fls_SetMode                     
+00005ee7  Fls_GetVersionInfo              
+00005f11  Fls_BlankCheck                  
+00005fa5  Fls_MainFunction                
+0000600d  Init_Queues                     
+00006129  Search_Queue                    
+000061cd  Job_Enqueue                     
+000063b5  Job_Dequeue                     
+000064a1  Get_SingleJob                   
+000064f9  CRCJob_Enqueue                  
+0000656d  CRCJob_Dequeue                  
+0000661f  IntMasterEnable                 
+0000662f  IntMasterDisable                
+0000663f  IntRegister                     
+00006691  IntUnregister                   
+000066a5  IntPriorityGroupingSet          
+000066bf  IntPriorityGroupingGet          
+000066f7  IntPrioritySet                  
+00006747  IntPriorityGet                  
+0000676b  IntEnable                       
+000067dd  IntDisable                      
+0000684f  IntIsEnabled                    
+000068d5  IntPendSet                      
+00006945  IntPendClear                    
+00006993  IntPriorityMaskSet              
+0000699f  IntPriorityMaskGet              
+000069a7  IntTrigger                      
+000069dd  Block_2_NvMSingleBlockCallback  
+00006a2b  Write_buffer                    
+00006a69  main                            
+00006b15  MemIf_Read                      
+00006b41  MemIf_Write                     
+00006b61  MemIf_GetStatus                 
+00006b75  MemIf_GetJobResult              
+00006b89  MemIf_InvalidateBlock           
+00006bb9  __aeabi_memcpy                  
+00006bb9  __aeabi_memcpy4                 
+00006bb9  __aeabi_memcpy8                 
+00006bb9  memcpy                          
+00006c55  __aeabi_memclr                  
+00006c55  __aeabi_memclr4                 
+00006c55  __aeabi_memclr8                 
+00006c57  __aeabi_memset                  
+00006c57  __aeabi_memset4                 
+00006c57  __aeabi_memset8                 
+00006c5d  memset                          
+00006ccf  __TI_decompress_lzss            
+00006d37  Det_ReportError                 
+00006d51  Det_ReportTransientFault        
+00006d6b  Det_ReportRuntimeError          
+00006d85  __TI_auto_init_nobinit_nopinit  
+00006dc9  CPUcpsid                        
+00006dd5  CPUprimask                      
+00006ddf  CPUcpsie                        
+00006deb  CPUwfi                          
+00006def  CPUbasepriSet                   
+00006dfd  CPUbasepriGet                   
+00006e09  _c_int00_noargs                 
+00006e3d  __TI_decompress_none            
+00006e4b  __TI_zero_init                  
+00006e57  ResetISR                        
+00006e63  SysCtlDelay                     
+00006e69  _system_pre_init                
+00006e6d  C$$EXIT                         
+00006e6d  abort                           
+000072d4  __TI_Handler_Table_Base         
+000072e0  __TI_Handler_Table_Limit        
+000072f0  __TI_CINIT_Base                 
+00007308  __TI_CINIT_Limit                
+20000000  g_pfnRAMVectors                 
+2000071c  BlockData                       
+200007f8  Standard_Job_Queue              
+20000900  Rdata                           
+20000928  ActiveSectorInfo                
+20000940  Block4_PRAMBLOCK                
+20000980  CRC_Job_Queue                   
+20000994  Block2_PRAMBLOCK                
+200009e8  JobParametersCopy               
+200009f7  ModuleInternalManagement        
+20000a00  NvMBlockDescriptor              
+20000b40  ValidBlocksInfo                 
+20000be0  Fee_BlockConfig                 
+20000c58  Wdata                           
+20000cbc  CRC_Queue_Indeces               
+20000cec  Block4_ROMBLOCK                 
+20000d01  Standard_Queue_Empty            
+20000d02  Standard_Queue_FULL             
+20000d03  Immediate_Queue_Empty           
+20000d04  Immediate_Queue_FULL            
+20000d05  CRC_Queue_Empty                 
+20000d06  CRC_Queue_Full                  
+20000d07  test_case_state                 
+20000d08  JobDone                         
+20000d09  JobError                        
+20000d1c  Block2_ROMBLOCK                 
+20000d2c  Block3_ROMBLOCK                 
+20000d5c  Ea_BlockSConfig                 
+20000d70  Fls_Config                      
+20000d78  MemIf_GetResultFctPtr           
+20000d80  MemIf_GetStatusFctPtr           
+20000d88  MemIf_InvalidateFctPtr          
+20000d90  MemIf_ReadFctPtr                
+20000d98  MemIf_WriteFctPtr               
+20000daa  Stand_Queue_Indeces             
+20000db0  __stack                         
+20000fb0  __STACK_END                     
+20000fb0  __STACK_TOP                     
+ffffffff  __TI_pprof_out_hndl             
+ffffffff  __TI_prof_data_size             
+ffffffff  __TI_prof_data_start            
+ffffffff  __binit__                       
+ffffffff  __c_args__                      
+ffffffff  binit                           
+UNDEFED   __mpu_init                      
+UNDEFED   _system_post_cinit              
 
-[83 symbols]
+[237 symbols]
