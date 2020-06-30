@@ -12,6 +12,8 @@
 **  AUTHOR       : Sahar Elnagar                                              **
 **                                                                            **
 **  Description  :  Device deiver for Internal EEPROM                         **
+**                                                                            **
+**  Notes        :  Built-in wear leveling                                    **
 *******************************************************************************/
 
 
@@ -24,6 +26,7 @@
 /*****************************************************************************************/
 #include "hw_types.h"
 #include "hw_eeprom.h"
+#include "sysctl.h"
 /*****************************************************************************************/
 /*                                   Include Other  headres                              */
 /*****************************************************************************************/
@@ -95,8 +98,6 @@
 /*****************************************************************************************/
 /*                                   Local Function Declaration                          */
 /*****************************************************************************************/
-static void SysCtlDelay(uint32  ui32Count) ;
-static void SysCtlPeripheralReset(uint32  ui32Peripheral);
 static void _EEPROMSectorMaskClear(void) ;
 static void _EEPROMSectorMaskSet(uint32 ui32Address);
 static void Eep_MainFunction_Read(void) ;
@@ -155,59 +156,6 @@ _EEPROMSectorMaskClear(void)
 }
 
 /***********************************************************************************/
-#if defined(ewarm) || defined(DOXYGEN)
-void
-SysCtlDelay(uint32  ui32Count)
-{
-    __asm("    subs    r0, #1\n"
-          "    bne.n   SysCtlDelay\n"
-          "    bx      lr");
-}
-#endif
-#if defined(codered) || defined(gcc) || defined(sourcerygxx)
-static void __attribute__((naked))
-SysCtlDelay(uint32  ui32Count)
-{
-    __asm("    subs    r0, #1\n"
-          "    bne     SysCtlDelay\n"
-          "    bx      lr");
-}
-#endif
-#if defined(rvmdk) || defined(__ARMCC_VERSION)
-__asm void
-SysCtlDelay(uint32  ui32Count)
-{
-    subs    r0, #1;
-    bne     SysCtlDelay;
-    bx      lr;
-}
-#endif
-/***************************************************************************/
-static void SysCtlPeripheralReset(uint32  ui32Peripheral)
-{
-    volatile uint8  ui8Delay;
-
-
-    //
-    // Put the peripheral into the reset state.
-    //
-    HWREGBITW(SYSCTL_SRBASE + ((ui32Peripheral & 0xff00) >> 8),
-              ui32Peripheral & 0xff) = 1;
-
-    //
-    // Delay for a little bit.
-    //
-    for(ui8Delay = 0; ui8Delay < 16; ui8Delay++)
-    {
-    }
-
-    //
-    // Take the peripheral out of the reset state.
-    //
-    HWREGBITW(SYSCTL_SRBASE + ((ui32Peripheral & 0xff00) >> 8),
-              ui32Peripheral & 0xff) = 0;
-}
-
 
 
 //*****************************************************************************
@@ -221,6 +169,7 @@ typedef struct
     Eep_AddressType Address;
     uint8*          DataPtr;
     Eep_LengthType  Length ;
+    uint8_t         Eep_InternalState ;
 }str_ParametersCopy;
 
 static str_ParametersCopy  ParametersCopyObj;
@@ -235,6 +184,15 @@ static str_ParametersCopy  ParametersCopyObj;
 #define ERASE_JOB       0x03
 #define COPMARE_JOB     0x04
 
+//*****************************************************************************
+//  EEPROM Main functions  Internal states
+//*****************************************************************************
+#define SET_EEPROM_ADDRESS              0x00
+#define WRITE_EEPROM_WORD               0x01
+#define END_JOB_SUCCESS                 0x02
+#define END_JOB_FAILED                  0x03
+#define READ_EEPROM_WORD                0x04
+
 static uint8 JobProcessing_State     = IDLE_JOB;
 
 static MemIf_StatusType   StatusType = MEMIF_UNINIT;
@@ -243,9 +201,16 @@ static MemIf_JobResultType JobResult = MEMIF_JOB_OK;
 
 static Eep_ConfigType* Global_Config = NULL_PTR ;
 
-static MemIf_ModeType  ModeType = MEMIF_MODE_SLOW ;
-
-
+/****************************************************************************************/
+/*    Function Name           : Eep_Init                                                */
+/*    Function Description    : Initializes the module                                  */
+/*    Parameter in            : const Ea_ConfigType* ConfigPtr                          */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : none                                                    */
+/*    Return value            : none                                                    */
+/*    Requirment              : SWS_Eep_00143                                           */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
 void Eep_Init( const Eep_ConfigType* ConfigPtr )
 {
     uint32 Status;
@@ -253,7 +218,7 @@ void Eep_Init( const Eep_ConfigType* ConfigPtr )
     #if(EepDevErrorDetect == STD_ON)
         if(ConfigPtr == NULL_PTR)
         {
-            Det_ReportError(EEPROM_DRIVER_ID, INSTANCE_ID,EEP_INIT_API_ID,EEP_E_PARAM_POINTER);
+            Det_ReportError(EEPROM_DRIVER_ID, EEP_INSTANCE_ID,EEP_INIT_API_ID,EEP_E_PARAM_POINTER);
         }
     #endif
 
@@ -285,7 +250,7 @@ void Eep_Init( const Eep_ConfigType* ConfigPtr )
       {
           /* Report error to Det Init failed */
         #if(EepDevErrorDetect == STD_ON)
-           Det_ReportError(EEPROM_DRIVER_ID, INSTANCE_ID,EEP_INIT_API_ID,EEP_E_INIT_FAILED);
+           Det_ReportError(EEPROM_DRIVER_ID, EEP_INSTANCE_ID,EEP_INIT_API_ID,EEP_E_INIT_FAILED);
         #endif
       }
 
@@ -310,14 +275,9 @@ void Eep_Init( const Eep_ConfigType* ConfigPtr )
        {
           /* Report error to Det Init failed */
           #if(EepDevErrorDetect == STD_ON)
-             Det_ReportError(EEPROM_DRIVER_ID, INSTANCE_ID,EEP_INIT_API_ID,EEP_E_INIT_FAILED);
+             Det_ReportError(EEPROM_DRIVER_ID, EEP_INSTANCE_ID,EEP_INIT_API_ID,EEP_E_INIT_FAILED);
           #endif
        }
-
-      /*[SWS_Eep_00044] The function Eep_Init shall set the EEPROM mode
-       *  to the configured default mode
-       */
-       ModeType = Global_Config->EepInitConfigurationRef->EepDefaultMode ;
 
       /* [SWS_Eep_00006] After having finished the module initialization, the function
        *  Eep_Init shall set the EEPROM state to MEMIF_IDLE and shall set the job result
@@ -327,20 +287,25 @@ void Eep_Init( const Eep_ConfigType* ConfigPtr )
 
 }
 
-void Eep_SetMode( MemIf_ModeType Mode )
-{
-    ModeType = Mode ;
-}
-
+/****************************************************************************************/
+/*    Function Name           : Eep_Read                                                */
+/*    Function Description    : Request Read job from EEPROM                            */
+/*    Parameter in            : EepromAddress , Length                                  */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : DataBufferPtr                                           */
+/*    Return value            : none                                                    */
+/*    Requirment              : SWS_Eep_00145                                           */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
 Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_LengthType Length )
 {
     /*
      * 1- Check function parameters
      */
-    if(EepromAddress > MAX_ADDRESS)
+    if(EepromAddress > EEP_END_ADDRESS)
     {
         #if (EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_READ_API_ID,EEP_E_PARAM_ADDRESS);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_READ_API_ID,EEP_E_PARAM_ADDRESS);
         #else
             return E_NOT_OK;
         #endif
@@ -348,7 +313,7 @@ Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_L
     else if(DataBufferPtr == NULL_PTR)
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_READ_API_ID,EEP_E_PARAM_POINTER);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_READ_API_ID,EEP_E_PARAM_POINTER);
         #else
             return E_NOT_OK;
         #endif
@@ -356,7 +321,7 @@ Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_L
     else if(Length < MIN_LENGTH || Length > (EEP_SIZE - EepromAddress))
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_READ_API_ID,EEP_E_PARAM_LENGTH);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_READ_API_ID,EEP_E_PARAM_LENGTH);
         #else
             return E_NOT_OK;
         #endif
@@ -367,7 +332,7 @@ Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_L
     else if(StatusType != MEMIF_IDLE)
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_READ_API_ID,EEP_E_UNINIT);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_READ_API_ID,EEP_E_UNINIT);
         #else
             return E_NOT_OK;
         #endif
@@ -378,7 +343,7 @@ Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_L
     else if(StatusType == MEMIF_BUSY ||JobResult == MEMIF_JOB_PENDING)
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_READ_API_ID,EEP_E_BUSY);
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_READ_API_ID,EEP_E_BUSY);
         #else
             return E_NOT_OK;
         #endif
@@ -391,6 +356,7 @@ Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_L
          ParametersCopyObj.Address = EepromAddress;
          ParametersCopyObj.DataPtr = DataBufferPtr;
          ParametersCopyObj.Length  = Length;
+         ParametersCopyObj.Eep_InternalState = SET_EEPROM_ADDRESS ;
 
         /*
          *  3- Initiate Reading Job
@@ -411,35 +377,44 @@ Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_L
         return E_OK;
 }
 
-
+/****************************************************************************************/
+/*    Function Name           : Eep_Write                                               */
+/*    Function Description    : Request Write job from EEPROM                           */
+/*    Parameter in            : EepromAddress.DataBufferPtr , Length                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : DataBufferPtr                                           */
+/*    Return value            : none                                                    */
+/*    Requirment              : SWS_Eep_00146                                           */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
 Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferPtr,Eep_LengthType Length )
 {
    /*
     * 1- Check function parameters
     */
-   if(EepromAddress > MAX_ADDRESS)
+   if(EepromAddress > EEP_END_ADDRESS)
    {
        #if (EepDevErrorDetect==STD_ON)
-           Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_PARAM_ADDRESS);
-       #else
-           return E_NOT_OK;
+           Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_PARAM_ADDRESS);
        #endif
+           return E_NOT_OK;
+
    }
    else if(DataBufferPtr == NULL_PTR)
    {
        #if(EepDevErrorDetect==STD_ON)
-           Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_PARAM_POINTER);
-       #else
-           return E_NOT_OK;
+           Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_PARAM_POINTER);
        #endif
+           return E_NOT_OK;
+
    }
    else if(Length < MIN_LENGTH || Length > (EEP_SIZE - EepromAddress))
    {
        #if(EepDevErrorDetect==STD_ON)
-           Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_PARAM_LENGTH);
-       #else
-           return E_NOT_OK;
+           Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_PARAM_LENGTH);
        #endif
+           return E_NOT_OK;
+
    }
    /*
     *Check Module state initialized or not
@@ -447,10 +422,10 @@ Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferP
    else if(StatusType != MEMIF_IDLE)
    {
        #if(EepDevErrorDetect==STD_ON)
-           Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_UNINIT);
-       #else
-           return E_NOT_OK;
+           Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_UNINIT);
        #endif
+           return E_NOT_OK;
+
    }
    /*
     * Check if the device is busy
@@ -458,10 +433,9 @@ Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferP
    else if(StatusType == MEMIF_BUSY ||JobResult == MEMIF_JOB_PENDING)
    {
        #if(EepDevErrorDetect==STD_ON)
-           Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_BUSY);
-       #else
-           return E_NOT_OK;
+           Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_WRITE_API_ID,EEP_E_BUSY);
        #endif
+           return E_NOT_OK;
    }
    else
    {
@@ -471,7 +445,7 @@ Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferP
         ParametersCopyObj.Address = EepromAddress;
         ParametersCopyObj.DataPtr = (uint8*)DataBufferPtr;
         ParametersCopyObj.Length  = Length;
-
+        ParametersCopyObj.Eep_InternalState = SET_EEPROM_ADDRESS ;
        /*
         *  3- Initiate Writing Job
         */
@@ -490,27 +464,35 @@ Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferP
        return E_OK;
 }
 
+/****************************************************************************************/
+/*    Function Name           : Eep_Erase                                               */
+/*    Function Description    : Request  EEPROM erase                                   */
+/*    Parameter in            : EepromAddress.DataBufferPtr , Length                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : DataBufferPtr                                           */
+/*    Return value            : none                                                    */
+/*    Requirment              : SWS_Eep_00147                                           */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
 Std_ReturnType Eep_Erase(Eep_AddressType EepromAddress,Eep_LengthType Length )
 {
       /*
        * 1- Check function parameters
        */
-      if(EepromAddress > MAX_ADDRESS)
+      if(EepromAddress > EEP_END_ADDRESS)
       {
           #if (EepDevErrorDetect==STD_ON)
-              Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_PARAM_ADDRESS);
-          #else
-              return E_NOT_OK;
+              Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_PARAM_ADDRESS);
           #endif
+              return E_NOT_OK;
       }
       /*Mass erase is the only possible erase in tm4c123g*/
       else if(Length !=EepEraseUnitSize)
       {
           #if(EepDevErrorDetect==STD_ON)
-              Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_PARAM_LENGTH);
-          #else
-              return E_NOT_OK;
+              Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_PARAM_LENGTH);
           #endif
+              return E_NOT_OK;
       }
       /*
        *Check Module state initialized or not
@@ -518,10 +500,9 @@ Std_ReturnType Eep_Erase(Eep_AddressType EepromAddress,Eep_LengthType Length )
       else if(StatusType != MEMIF_IDLE)
       {
           #if(EepDevErrorDetect==STD_ON)
-              Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_UNINIT);
-          #else
-              return E_NOT_OK;
+              Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_UNINIT);
           #endif
+              return E_NOT_OK;
       }
       /*
        * Check if the device is busy
@@ -529,10 +510,9 @@ Std_ReturnType Eep_Erase(Eep_AddressType EepromAddress,Eep_LengthType Length )
       else if(StatusType == MEMIF_BUSY ||JobResult == MEMIF_JOB_PENDING )
       {
           #if(EepDevErrorDetect==STD_ON)
-              Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_BUSY);
-          #else
-              return E_NOT_OK;
+              Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_ERASE_API_ID,EEP_E_BUSY);
           #endif
+              return E_NOT_OK;
       }
       else
       {
@@ -561,34 +541,42 @@ Std_ReturnType Eep_Erase(Eep_AddressType EepromAddress,Eep_LengthType Length )
           return E_OK;
 }
 
+/****************************************************************************************/
+/*    Function Name           : Eep_Compare                                             */
+/*    Function Description    : Request  compare job                                    */
+/*    Parameter in            : EepromAddress.DataBufferPtr , Length                    */
+/*    Parameter inout         : none                                                    */
+/*    Parameter out           : DataBufferPtr                                           */
+/*    Return value            : none                                                    */
+/*    Requirment              : SWS_Eep_00148                                           */
+/*    Notes                   :                                                         */
+/****************************************************************************************/
 Std_ReturnType Eep_Compare(Eep_AddressType EepromAddress,const uint8* DataBufferPtr,Eep_LengthType Length )
 {
     /*
      * 1- Check function parameters
      */
-    if(EepromAddress > MAX_ADDRESS)
+    if(EepromAddress > EEP_END_ADDRESS)
     {
         #if (EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_PARAM_ADDRESS);
-        #else
-            return E_NOT_OK;
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_PARAM_ADDRESS);
         #endif
+            return E_NOT_OK;
     }
     else if(DataBufferPtr == NULL_PTR)
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_PARAM_POINTER);
-        #else
-            return E_NOT_OK;
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_PARAM_POINTER);
         #endif
+            return E_NOT_OK;
     }
     else if(Length < MIN_LENGTH || Length > (EEP_SIZE - EepromAddress))
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_PARAM_LENGTH);
-        #else
-            return E_NOT_OK;
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_PARAM_LENGTH);
         #endif
+            return E_NOT_OK;
+
     }
     /*
      *Check Module state initialized or not
@@ -596,10 +584,10 @@ Std_ReturnType Eep_Compare(Eep_AddressType EepromAddress,const uint8* DataBuffer
     else if(StatusType != MEMIF_IDLE)
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_UNINIT);
-        #else
-            return E_NOT_OK;
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_UNINIT);
         #endif
+            return E_NOT_OK;
+
     }
     /*
      * Check if the device is busy
@@ -607,10 +595,9 @@ Std_ReturnType Eep_Compare(Eep_AddressType EepromAddress,const uint8* DataBuffer
     else if(StatusType == MEMIF_BUSY ||JobResult == MEMIF_JOB_PENDING)
     {
         #if(EepDevErrorDetect==STD_ON)
-            Det_ReportError(EEPROM_DRIVER_ID,INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_BUSY);
-        #else
-            return E_NOT_OK;
+            Det_ReportError(EEPROM_DRIVER_ID,EEP_INSTANCE_ID,EEP_COMPARE_API_ID,EEP_E_BUSY);
         #endif
+        return E_NOT_OK;
     }
     else
     {
@@ -733,91 +720,67 @@ void Eep_MainFunction(void)
     }
 }
 
+
+
 /*****************************************************************************************
  * Function Description : The function Eep_MainFunction_Read shall perform               *
  *  the processing of the EEPROM read job.  (SRS_Eep_12047)                              *
  *****************************************************************************************/
 static void Eep_MainFunction_Read(void)
 {
-    /*Variable to save the start byte to access in a word*/
-     uint8  ByteNum  = 0 ;
-    /*Variable to save the value of the word*/
-     uint32 DataWord = 0;
+    switch(ParametersCopyObj.Eep_InternalState)
+    {
+        case SET_EEPROM_ADDRESS :
+            /* Make sure the EEPROM is idle before we start.*/
+           while(HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING)
+           {
+           }
+          /*
+           * Set the block and offset appropriately to read the first word.
+           */
+           HWREG(EEPROM_EEBLOCK)  = EEPROMBlockFromAddr(ParametersCopyObj.Address);
+           HWREG(EEPROM_EEOFFSET) = OFFSET_FROM_ADDR(ParametersCopyObj.Address)   ;
 
-     /* Make sure the EEPROM is idle before we start.*/
-      while(HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING)
-      {
-      }
-     /*
-      * Set the block and offset appropriately to read the first word.
-      */
-      HWREG(EEPROM_EEBLOCK)  = EEPROMBlockFromAddr(ParametersCopyObj.Address);
-      HWREG(EEPROM_EEOFFSET) = OFFSET_FROM_ADDR(ParametersCopyObj.Address)   ;
+           ParametersCopyObj.Length /= 4 ;
+           ParametersCopyObj.Eep_InternalState = READ_EEPROM_WORD ;
+        break;
+        case READ_EEPROM_WORD :
+            if(ParametersCopyObj.Length)
+            {
+                   /* Read the next word through the autoincrementing register.*/
+                 *((uint32*)(ParametersCopyObj.DataPtr)) = HWREG(EEPROM_EERDWRINC);
+                     ParametersCopyObj.DataPtr +=4;
+                     ParametersCopyObj.Length --;
+                /*
+                 * Do we need to move to the next block?  This is the case if the
+                 * offset register has just wrapped back to 0.  Note that we only
+                 * write the block register if we have more data to read.  If this
+                 * register is written, the hardware expects a read or write operation
+                 * next.  If a mass erase is requested instead, the mass erase will
+                 * fail.
+                 */
+                 if(ParametersCopyObj.Length && (HWREG(EEPROM_EEOFFSET) == 0))
+                 {
+                     HWREG(EEPROM_EEBLOCK) += 1;
+                 }
+            }
+            else
+            {
+                ParametersCopyObj.Eep_InternalState = END_JOB_SUCCESS ;
+            }
+        break;
 
-     /*Check if the current address is not word aligned*/
-      if(ParametersCopyObj.Address % WORD_SIZE != 0)
-      {
-          /*Get the start byte number to read in the word located in the required address */
-          ByteNum = ParametersCopyObj.Address % WORD_SIZE ;
-
-          /*Read the word located at the current address*/
-          DataWord = HWREG(EEPROM_EERDWRINC) ;
-
-      }
-      while(ParametersCopyObj.Length)
-      {
-          /*Check if no permission to read error occurred*/
-          if(DataWord == NO_READ_PERMISSION_PATTERN)
-          {
-              /*Report Production Error to DEM :  EEP_E_READ_FAILED */
-              JobResult  = MEMIF_JOB_FAILED ;
-              StatusType = MEMIF_IDLE   ;
-              break;
-          }
-          if(ByteNum == WORD_SIZE)
-          {
-            /* Read the next word through the autoincrementing register.*/
-              DataWord = HWREG(EEPROM_EERDWRINC);
-              ByteNum = 0;
-          }
-          else
-          {
-             /*Read the current byte within the current word */
-              *(ParametersCopyObj.DataPtr) = *(((uint8*)&DataWord) + ByteNum);
-
-             /*Increment the data pointer */
-              ParametersCopyObj.DataPtr++;
-
-             /*Increment to the next byte within the word*/
-              ByteNum ++ ;
-
-             /*Decrement the number of bytes to read*/
-              ParametersCopyObj.Length-- ;
-          }
-         /*
-          * Do we need to move to the next block?  This is the case if the
-          * offset register has just wrapped back to 0.  Note that we only
-          * write the block register if we have more data to read.  If this
-          * register is written, the hardware expects a read or write operation
-          * next.  If a mass erase is requested instead, the mass erase will
-          * fail.
-          */
-          if(ParametersCopyObj.Length && (HWREG(EEPROM_EEOFFSET) == 0))
-          {
-              HWREG(EEPROM_EEBLOCK) += 1;
-          }
-      }
-      if(JobResult != MEMIF_JOB_FAILED)
-      {
-         /*Job done correctly*/
-          JobResult  = MEMIF_JOB_OK ;
-          StatusType = MEMIF_IDLE   ;
-         /*End job notification for the upper layer if configured*/
-          if(Global_Config->EepInitConfigurationRef->EepJobEndNotification != NULL_PTR)
-          {
+        case END_JOB_SUCCESS :
+            /*Job done correctly*/
+            JobResult  = MEMIF_JOB_OK ;
+            StatusType = MEMIF_IDLE   ;
+            /*End job notification for the upper layer if configured*/
+            if(Global_Config->EepInitConfigurationRef->EepJobEndNotification != NULL_PTR)
+            {
               Global_Config->EepInitConfigurationRef->EepJobEndNotification();
-          }
-      }
+            }
+        break;
+    }
 }
 
 /*****************************************************************************************
@@ -826,117 +789,112 @@ static void Eep_MainFunction_Read(void)
  *****************************************************************************************/
 static void Eep_MainFunction_Write(void)
 {
-    /*Variable to save the start byte to access in a word*/
-     uint8  ByteNum  = 0 ;
-    /*Variable to save the value of the word*/
-     uint32 DataWord = 0;
 
-    /* Make sure the EEPROM is idle before we start.*/
-     while(HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING)
-     {
-     }
-
-    /*
-     * Set the block and offset appropriately to read the first word.
-     */
-     HWREG(EEPROM_EEBLOCK)  = EEPROMBlockFromAddr(ParametersCopyObj.Address);
-     HWREG(EEPROM_EEOFFSET) = OFFSET_FROM_ADDR(ParametersCopyObj.Address)   ;
-
-    /*Check if the current address is not word aligned*/
-     if(ParametersCopyObj.Address % WORD_SIZE != 0)
-     {
-         /*Get the start byte number to read in the word located in the required address */
-         ByteNum = ParametersCopyObj.Address % WORD_SIZE ;
-         /*Read the word to only modify desired bytes*/
-         DataWord = HWREG(EEPROM_EERDWR) ;
-     }
-     while(ParametersCopyObj.Length)
+    switch(ParametersCopyObj.Eep_InternalState)
     {
-        if(ByteNum == WORD_SIZE )
-        {
+/*******************case : SET_EEPROM_ADDRESS **********************/
+        case SET_EEPROM_ADDRESS :
+            /* Make sure the EEPROM is idle before we start.*/
+            while(HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING)
+            {
+            }
+
            /*
-            * This is a workaround for a silicon problem on Blizzard rev A.  We
-            * need to do this before every word write to ensure that we don't
-            * have problems in multi-word writes that span multiple flash sectors.
+            * Set the block and offset appropriately to read the first word.
             */
-            _EEPROMSectorMaskSet(ParametersCopyObj.Address);
-            /*
-             * Write the next word through the autoincrementing register.
-             */
-             HWREG(EEPROM_EERDWRINC) = DataWord ;
-             /*
-             * Wait a few cycles.  In some cases, the WRBUSY bit is not set
-             * immediately and this prevents us from dropping through the polling
-             * loop before the bit is set.
-             */
-             SysCtlDelay(10);
+            HWREG(EEPROM_EEBLOCK)  = EEPROMBlockFromAddr(ParametersCopyObj.Address);
+            HWREG(EEPROM_EEOFFSET) = OFFSET_FROM_ADDR(ParametersCopyObj.Address)   ;
+            ParametersCopyObj.Eep_InternalState = WRITE_EEPROM_WORD;
+            ParametersCopyObj.Length/=4;
+        break;
 
-             /* Wait for the write to complete.*/
-             while(HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING)
-             {}
-             /*
-              * Make sure we completed the write without errors.  Note that we
-              * must check this per-word because write permission can be set per
-              * block resulting in only a section of the write not being performed.
-              */
-             if(HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_NOPERM)
-             {
-                 /* An error was reported that would prevent the values from
-                  * being written correctly.
+
+/*****************case : WRITE_EEPROM_WORD*****************/
+        case WRITE_EEPROM_WORD :
+         if(ParametersCopyObj.Length)
+         {
+
+               /*
+                * This is a workaround for a silicon problem on Blizzard rev A.  We
+                * need to do this before every word write to ensure that we don't
+                * have problems in multi-word writes that span multiple flash sectors.
+                */
+                _EEPROMSectorMaskSet(ParametersCopyObj.Address);
+                /*
+                 * Write the next word through the autoincrementing register.
+                 */
+                 HWREG(EEPROM_EERDWRINC) = *((uint32_t*)ParametersCopyObj.DataPtr) ;
+                 /*
+                 * Wait a few cycles.  In some cases, the WRBUSY bit is not set
+                 * immediately and this prevents us from dropping through the polling
+                 * loop before the bit is set.
+                 */
+                 SysCtlDelay(10);
+
+                 /* Wait for the write to complete.*/
+                 while(HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING)
+                 {}
+                 /*
+                  * Make sure we completed the write without errors.  Note that we
+                  * must check this per-word because write permission can be set per
+                  * block resulting in only a section of the write not being performed.
                   */
-                  _EEPROMSectorMaskClear();
-                 /*Report Production Error to DEM :  EEP_E_WRITE_FAILED */
-                  JobResult  = MEMIF_JOB_FAILED ;
-                  StatusType = MEMIF_IDLE   ;
-                  break;
-             }
-             else
+                 if(HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_NOPERM)
+                 {
+                     /* An error was reported that would prevent the values from
+                      * being written correctly.
+                      */
+                      _EEPROMSectorMaskClear();
+                       ParametersCopyObj.Eep_InternalState = END_JOB_FAILED ;
+                 }
+
+               /*Decrement the number of bytes to write*/
+                ParametersCopyObj.Length-- ;
+                ParametersCopyObj.DataPtr+=4;
+            /*
+             * Do we need to move to the next block?  This is the case if the
+             * offset register has just wrapped back to 0.  Note that we only
+             * write the block register if we have more data to read.  If this
+             * register is written, the hardware expects a read or write operation
+             * next.  If a mass erase is requested instead, the mass erase will
+             * fail.
+             */
+             if(ParametersCopyObj.Length && (HWREG(EEPROM_EEOFFSET) == 0))
              {
-                 /*Read the word to only modify desired bytes*/
-                  DataWord = HWREG(EEPROM_EERDWR) ;
+                 HWREG(EEPROM_EEBLOCK) += 1;
+             }
+
+             if(ParametersCopyObj.Length == 0)
+             {
+                 ParametersCopyObj.Eep_InternalState = END_JOB_SUCCESS ;
              }
         }
-        else
-        {
-           /*Write the current byte within the Data buffer */
-            *(((uint8*)&DataWord) + ByteNum) = *(ParametersCopyObj.DataPtr);
-
-           /*Increment the data pointer */
-            ParametersCopyObj.DataPtr++;
-
-           /*Increment to the next byte within the word*/
-            ByteNum ++ ;
-
-           /*Decrement the number of bytes to write*/
-            ParametersCopyObj.Length-- ;
-        }
-        /*
-         * Do we need to move to the next block?  This is the case if the
-         * offset register has just wrapped back to 0.  Note that we only
-         * write the block register if we have more data to read.  If this
-         * register is written, the hardware expects a read or write operation
-         * next.  If a mass erase is requested instead, the mass erase will
-         * fail.
-         */
-         if(ParametersCopyObj.Length && (HWREG(EEPROM_EEOFFSET) == 0))
-         {
-             HWREG(EEPROM_EEBLOCK) += 1;
-         }
-    }
-    /* Clear the sector protection bits to prevent possible problems when
-     * programming the main flash array later.
-     */
-    _EEPROMSectorMaskClear();
-    if(JobResult != MEMIF_JOB_FAILED)
-    {
-        /*Job done correctly*/
-         JobResult  = MEMIF_JOB_OK ;
-         StatusType = MEMIF_IDLE   ;
-        /*End job notification for the upper layer if configured*/
-         if(Global_Config->EepInitConfigurationRef->EepJobEndNotification != NULL_PTR)
-         {
-             Global_Config->EepInitConfigurationRef->EepJobEndNotification();
-         }
+     break;
+/******************case :  END_JOB_FAILED********************/
+        case END_JOB_FAILED :
+            /*Report Production Error to DEM :  EEP_E_WRITE_FAILED */
+            JobResult  = MEMIF_JOB_FAILED ;
+            StatusType = MEMIF_IDLE   ;
+            if(Global_Config->EepInitConfigurationRef->EepJobErrorNotification!= NULL_PTR)
+            {
+                Global_Config->EepInitConfigurationRef->EepJobErrorNotification();
+            }
+        break;
+/******************case END_JOB_SUCCESS :*******************/
+        case END_JOB_SUCCESS :
+            /* Clear the sector protection bits to prevent possible problems when
+             * programming the main flash array later.
+             */
+            _EEPROMSectorMaskClear();
+            /*Job done correctly*/
+             JobResult  = MEMIF_JOB_OK ;
+             StatusType = MEMIF_IDLE   ;
+            /*End job notification for the upper layer if configured*/
+             if(Global_Config->EepInitConfigurationRef->EepJobEndNotification != NULL_PTR)
+             {
+                 Global_Config->EepInitConfigurationRef->EepJobEndNotification();
+             }
+         break;
     }
 }
 

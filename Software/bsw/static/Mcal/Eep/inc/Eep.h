@@ -19,15 +19,21 @@
 
 #include "Std_Types.h"
 #include "Eep_Cfg.h"
+#include "Eep_Types.h"
 
 
 
-/*Create Module Types*/
-typedef uint8   EepDefaultModeType;
-typedef uint16  Eep_AddressType;
-typedef uint16  Eep_LengthType;
 
+#ifndef NULL_PTR
 #define NULL_PTR  ((void*)0)
+#endif
+
+//*****************************************************************************
+//
+//  Define word size in EEPROM
+//
+//*****************************************************************************
+#define PHYSICAL_WORD_SIZE          4
 
 /*******************************************************************************/
 //  EEPROM Module ID
@@ -37,7 +43,7 @@ typedef uint16  Eep_LengthType;
 /*******************************************************************************/
 //  Instance Id
 /*******************************************************************************/
-#define INSTANCE_ID                 0x00
+#define EEP_INSTANCE_ID                 0x00
 
 /*******************************************************************************/
 //  EEPROM APIs IDs
@@ -54,10 +60,10 @@ typedef uint16  Eep_LengthType;
 #define EEP_SIZE                     2048
 
 /*******************************************************************************/
-//  EEPROM Address Range (Byte addressable)
+//  EEPROM Address Range (word addressable)
 /*******************************************************************************/
-#define MIN_ADDRESS                  (0U)
-#define MAX_ADDRESS                   EEP_SIZE-1
+#define EEP_START_ADDRESS                 (0U)
+#define EEP_END_ADDRESS                   EEP_SIZE-4
 
 /*******************************************************************************/
 //  EEPROM Minimum number of bytes to read
@@ -84,7 +90,7 @@ typedef uint16  Eep_LengthType;
 /*******************************************************************************/
 // Published information
 /*******************************************************************************/
-
+#define EepAllowedWriteCycles      (500000) 
 #define EepEraseUnitSize           EEP_SIZE            /*Mass Erase only*/
 #define EepEraseValue              0xFFFFFFFF          /*Value of an erased EEPROM cell.*/
 #define EepMinimumAddressType      (16U)               /*Minimum expected size of Eep_AddressType, 16 bits */
@@ -95,31 +101,17 @@ typedef uint16  Eep_LengthType;
 
 
 /*******************************************************************************/
-//  Container for runtime configuration parameters of the EEPROM driver.
-//   Implementation Type: Eep_ConfigType.
+//  Functions Prototypes
 /*******************************************************************************/
-typedef struct
-{
-    /*This parameter is the EEPROM device base address. Implementation Type: Eep_AddressType*/
-    uint32                       EepBaseAddress ;
-    EepDefaultModeType           EepDefaultMode;
-    float32                      EepJobCallCycle;
-    void(*EepJobEndNotification)(void);
-    void(*EepJobErrorNotification)(void);
-    uint32                       EepNormalReadBlockSize;
-    uint32                       EepNormalWriteBlockSize;
-    uint32                       EepSize;
-}EepInitConfiguration;
-
-typedef struct
-{
-    EepInitConfiguration* EepInitConfigurationRef;
-}Eep_ConfigType;
-
-
 void Eep_Init( const Eep_ConfigType* ConfigPtr );
 Std_ReturnType Eep_Read(Eep_AddressType EepromAddress,uint8* DataBufferPtr,Eep_LengthType Length );
 Std_ReturnType Eep_Write(Eep_AddressType EepromAddress, const uint8* DataBufferPtr,Eep_LengthType Length );
+Std_ReturnType Eep_Erase(Eep_AddressType EepromAddress,Eep_LengthType Length ) ;
+void Eep_Cancel(void);
+MemIf_StatusType Eep_GetStatus(void);
+MemIf_JobResultType Eep_GetJobResult(void) ;
+void Eep_MainFunction(void);
+
 #endif /* EEP_H_ */
 
 
