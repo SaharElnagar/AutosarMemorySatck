@@ -12,7 +12,7 @@
 #include "Fee_Cfg.h"
 #include "AppCfg.h"
 
-
+extern  uint8 Block3_RAMBLOCK[NVM_NVRAM_BLOCK_3_LENGTH];
 
 NvMBlockDescriptorType NvMBlockDescriptor[NUMBER_OF_NVM_BLOCKS] =
  {
@@ -32,7 +32,7 @@ NvMBlockDescriptorType NvMBlockDescriptor[NUMBER_OF_NVM_BLOCKS] =
              .NvMNvBlockBaseNumber          =   NVM_NVRAM_BLOCK_2_BASENUMBER    ,
              .NvMNvBlockLength              =   NVM_NVRAM_BLOCK_2_LENGTH        ,
              .NvMNvBlockNum                 =   1                               ,
-             .NvMNvramDeviceId              =   0                               ,
+             .NvMNvramDeviceId              =   1                               ,
              .NvMRamBlockDataAddress        =   Block2_PRAMBLOCK                ,
              .NvMRomBlockDataAddress        =   Block2_ROMBLOCK                 ,
              .NvMRomBlockNum                =   1                               ,
@@ -43,7 +43,7 @@ NvMBlockDescriptorType NvMBlockDescriptor[NUMBER_OF_NVM_BLOCKS] =
          /*Block 3 Configurations*/
          {
              .NvMBlockCrcType               =   NVM_CRC32           ,
-             .NvMBlockManagement            =   NVM_BLOCK_DATASET   ,
+             .NvMBlockManagement            =   NVM_BLOCK_NATIVE   ,
              .NvMBlockUseCrc                =   STD_ON              ,
              .NvMBlockUseSetRamBlockStatus  =   STD_ON              ,
              .NvMCalcRamBlockCrc            =   STD_ON              ,
@@ -53,10 +53,10 @@ NvMBlockDescriptorType NvMBlockDescriptor[NUMBER_OF_NVM_BLOCKS] =
              .NvMNvBlockLength              =   NVM_NVRAM_BLOCK_3_LENGTH        ,
              .NvMNvBlockNum                 =   2                               ,
              .NvMNvramDeviceId              =   0                               ,
-             .NvMRamBlockDataAddress        =   NULL                        ,
+             .NvMRamBlockDataAddress        =   Block3_RAMBLOCK                        ,
              .NvMRomBlockDataAddress        =   Block3_ROMBLOCK                 ,
              .NvMRomBlockNum                =   1                               ,
-             .NvMSelectBlockForReadAll      =   STD_OFF                         ,
+             .NvMSelectBlockForReadAll      =   STD_ON                         ,
              .NvMSelectBlockForWriteAll     =   STD_ON                          ,
              .NvMSingleBlockCallback        =   Block_2_NvMSingleBlockCallback  ,
          }
