@@ -876,6 +876,7 @@ Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr )
             WriteJob.RAM_Ptr = (uint8*)NvMBlockDescriptor[BlockId].NvMRamBlockDataAddress ;
         }
 
+
         /*[SWS_NvM_00901]
          * If the function NvM_WriteBlock is provided with NULL as a RAM block address
          * and it has the explicit synchronization configured then the explicit synchronization is used
@@ -884,7 +885,11 @@ Std_ReturnType NvM_WriteBlock( NvM_BlockIdType BlockId, const void* NvM_SrcPtr )
             /*Use explicit sync*/
             /*Use RAM mirror pointer*/
         }
-
+        /*Initialize End job status*/
+        #if(NVM_POLLING_MODE == STD_OF)
+         EndJobStatus.EndJobFailed  = 0 ;
+         EndJobStatus.EndJobSuccess = 0;
+        #endif
         Return_Val = Job_Enqueue(WriteJob) ;
     }
 
@@ -2149,7 +2154,7 @@ static void NvM_MainFunction_ReadAll(void)
                         BlockNumber = (NvMBlockDescriptor[block_counter].NvMNvBlockBaseNumber <<\
                                                     NVM_DATASET_SELECTION_BITS ) ;
                         Length = NvMBlockDescriptor[block_counter].NvMNvBlockLength ;
-                        MemIf_Read(DeviceId , BlockNumber ,TempBuffer ,Length) ;
+                        MemIf_Read(DeviceId , BlockNumber ,TempBuffer ,Length+CRC_SIZE) ;
                     }
 
                      /*Read Job result*/

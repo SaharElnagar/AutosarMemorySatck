@@ -56,7 +56,7 @@
 #define BLOCK_2_NUMBER                   (2U)
 #define BLOCK_3_NUMBER                   (3U)
 #define BLOCK_4_NUMBER                   (4U)
-#define BLOCK_5_NUMBER                   (5U)
+#define BLOCK_5_NUMBER                   (6U)
 #define BLOCK_6_NUMBER                   (6U)
 #define BLOCK_7_NUMBER                   (7U)
 #define BLOCK_8_NUMBER                   (8U)
@@ -69,14 +69,14 @@
 #define BLOCK_2_SIZE                    (20U)
 #define BLOCK_3_SIZE                    (20U)
 #define BLOCK_4_SIZE                    (20U)
-#define BLOCK_5_SIZE                    (200U)
+#define BLOCK_5_SIZE                    (20U)
 #define BLOCK_6_SIZE                    (50U)
 #define BLOCK_7_SIZE                    (4U)
 #define BLOCK_8_SIZE                    (17U)
 #define BLOCK_9_SIZE                    (25U)
 #define BLOCK_10_SIZE                   (30U)
 
-#define MAX_CONFIGURED_BLOCK_SIZE       BLOCK_5_SIZE
+#define MAX_CONFIGURED_BLOCK_SIZE       BLOCK_6_SIZE
 
 /*sum Size of all logical blocks in bytes. */
 #define BLOCKS_SIZE                     (BLOCK_1_SIZE +BLOCK_2_SIZE+ BLOCK_3_SIZE+ BLOCK_4_SIZE+ BLOCK_5_SIZE+\

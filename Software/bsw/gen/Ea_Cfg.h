@@ -76,12 +76,12 @@
   Note: Depending on the number of bits set aside for dataset selection several other block numbers
   shall also be left out to ease implementation.
 */
-#define EA_BLOCK_0_NUMBER                       (1U)
+#define EA_BLOCK_0_NUMBER                       (4U)
 #define EA_BLOCK_1_NUMBER                       (5U)
 
 
 /*Size of a logical block in bytes. */
-#define  EA_BLOCK_0_SIZE                        (32U)
+#define  EA_BLOCK_0_SIZE                        (8U)
 #define  EA_BLOCK_1_SIZE                        (16U)
 
 
